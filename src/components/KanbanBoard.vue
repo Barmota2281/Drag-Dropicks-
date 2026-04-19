@@ -31,10 +31,17 @@
       <h1 class="text-[#c7d297] mb-7 text-4xl tracking-wide font-bold">{{ activeBoard?.title || 'Drag&Dropicks' }}</h1>
 
       <div v-if="activeBoard" class="flex gap-6 overflow-x-auto items-start pb-5 w-full flex-1">
-        <div v-for="column in activeBoard.columns" :key="column.id" class="flex-none w-80 bg-[#3e2e25] rounded-xl p-4 shadow-md border-t-4 border-[#6b8e23] max-h-full flex flex-col">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-[#a3b86c] mt-0 text-xl font-semibold">{{ column.title }}</h3>
-            <span class="text-[#f7f3e8] text-sm bg-[#2b1f1a] px-2 py-1 rounded">{{ column.tasks.length }}</span>
+        <div v-for="column in activeBoard.columns" :key="column.id"
+             class="flex-none w-80 bg-[#3e2e25] rounded-xl p-4 shadow-md border-t-4 max-h-full flex flex-col transition-colors"
+             :style="{ borderTopColor: column.color || '#6b8e23' }">
+          <div class="flex justify-between items-center mb-4 group/header">
+            <h3 class="mt-0 text-xl font-semibold transition-colors" :style="{ color: column.color || '#a3b86c' }">{{ column.title }}</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-[#f7f3e8] text-sm bg-[#2b1f1a] px-2 py-1 rounded">{{ column.tasks.length }}</span>
+              <button @click="editColumn(column)" class="text-gray-400 hover:text-white opacity-0 group-hover/header:opacity-100 transition-opacity p-1">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              </button>
+            </div>
           </div>
 
           <draggable
@@ -92,6 +99,27 @@
         <div class="text-[#a3b86c] text-xl">Выберите или создайте доску слева</div>
       </div>
     </div>
+
+    <!-- Модальное окно редактирования колонки -->
+    <div v-if="editingColumn" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="bg-[#3e2e25] p-6 rounded-xl shadow-xl w-96 border border-[#6b8e23]">
+        <h2 class="text-xl text-[#c7d297] mb-4 font-bold">Настройки колонки</h2>
+        <div class="mb-4">
+          <label class="block text-[#f7f3e8] text-sm mb-2">Название</label>
+          <input v-model="editColData.title" type="text" class="w-full bg-[#2b1f1a] text-[#f7f3e8] border border-[#6b8e23] rounded p-2 focus:outline-none focus:ring-1 focus:ring-[#c7d297]">
+        </div>
+        <div class="mb-6">
+          <label class="block text-[#f7f3e8] text-sm mb-2">Цвет (верхняя граница и заголовок)</label>
+          <input v-model="editColData.color" type="color" class="w-full h-10 border-0 bg-transparent rounded cursor-pointer">
+        </div>
+        <div class="flex justify-end gap-3 items-center">
+          <button @click="deleteColumn(editingColumn.id)" class="text-red-500 hover:text-red-400 mr-auto text-sm">Удалить колонку</button>
+          <button @click="closeEditColumn" class="text-gray-400 hover:text-white px-3 py-2 rounded">Отмена</button>
+          <button @click="saveColumnEdit" class="bg-[#6b8e23] text-[#2b1f1a] px-4 py-2 rounded hover:bg-[#a3b86c] transition-colors font-medium">Сохранить</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -190,8 +218,41 @@ const addColumn = () => {
   if (activeBoard.value) {
     const title = prompt('Название колонки:')
     if (title?.trim()) {
-      activeBoard.value.columns.push({ id: generateId(), title: title.trim(), tasks: [] })
+      activeBoard.value.columns.push({ id: generateId(), title: title.trim(), color: '#6b8e23', tasks: [] })
     }
+  }
+}
+
+// Logic for editing column
+const editingColumn = ref(null)
+const editColData = ref({ title: '', color: '#6b8e23' })
+
+const editColumn = (column) => {
+  editingColumn.value = column
+  editColData.value = { title: column.title, color: column.color || '#6b8e23' }
+}
+
+const closeEditColumn = () => {
+  editingColumn.value = null
+}
+
+const saveColumnEdit = () => {
+  if (editingColumn.value && activeBoard.value) {
+    const col = activeBoard.value.columns.find(c => c.id === editingColumn.value.id)
+    if (col) {
+      col.title = editColData.value.title
+      col.color = editColData.value.color
+    }
+    closeEditColumn()
+  }
+}
+
+const deleteColumn = (columnId) => {
+  if (confirm('Вы уверены, что хотите удалить эту колонку со всеми задачами?')) {
+    if (activeBoard.value) {
+      activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
+    }
+    closeEditColumn()
   }
 }
 
