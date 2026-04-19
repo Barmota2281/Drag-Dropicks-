@@ -94,13 +94,15 @@
                   :editor="element.editor"
                   :tippy-options="{ duration: 100 }"
                   v-if="element.editor"
-                  class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden"
+                  class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
                 >
                   <button @click="element.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
                   <button @click="element.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
                   <button @click="element.editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
                   <button @click="element.editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
                   <button @click="element.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
+                  <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                  <input type="color" @input="(event) => element.editor.chain().focus().setColor(event.target.value).run()" :value="element.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста" />
                  </bubble-menu>
 
                 <!-- Хендл для перетаскивания задачи (по клику сюда перетаскивается вся карточка) -->
@@ -145,13 +147,15 @@
               :editor="activeTask.editor"
               :tippy-options="{ duration: 100 }"
               v-if="activeTask.editor"
-              class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden"
+              class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
             >
               <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
               <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
               <button @click="activeTask.editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
               <button @click="activeTask.editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
               <button @click="activeTask.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
+              <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <input type="color" @input="(event) => activeTask.editor.chain().focus().setColor(event.target.value).run()" :value="activeTask.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста" />
              </bubble-menu>
             <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none" />
           </div>
