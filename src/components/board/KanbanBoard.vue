@@ -33,12 +33,19 @@
           </button>
         </div>
 
-        <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold mt-4 mb-2">Задачи</h2>
-        <div v-for="task in standaloneTasks" :key="task.id"
-             @click="selectTask(task.id)"
-             class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
-             :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-400 dark:border-blue-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
-          {{ task.title || 'Новая задача' }}
+        <div class="mt-4 flex items-center justify-between mb-2">
+          <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" @click="isTasksOpen = !isTasksOpen">
+            <svg class="w-4 h-4 transition-transform" :class="{'rotate-90': isTasksOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            Задачи
+          </h2>
+        </div>
+        <div v-show="isTasksOpen" class="flex flex-col gap-1 transition-all overflow-hidden">
+          <div v-for="task in standaloneTasks" :key="task.id"
+               @click="selectTask(task.id)"
+               class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
+               :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-400 dark:border-blue-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+            {{ task.title || 'Новая задача' }}
+          </div>
         </div>
       </div>
 
@@ -130,7 +137,10 @@
       <div v-else-if="currentView === 'task' && activeTask" class="flex-1 flex flex-col overflow-y-auto">
         <div class="max-w-4xl w-full mx-auto pb-10">
           <input v-model="activeTask.title" type="text" placeholder="Название задачи" class="w-full text-3xl font-bold text-gray-900 dark:text-gray-100 bg-transparent border-none focus:outline-none mb-6 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 min-h-[400px]">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 min-h-[400px] relative">
+            <div class="custom-drag-handle flex items-center justify-center w-5 h-6 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-grab active:cursor-grabbing transition-colors z-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+            </div>
             <bubble-menu
               :editor="activeTask.editor"
               :tippy-options="{ duration: 100 }"
@@ -317,6 +327,7 @@ const selectBoard = (id) => {
 const standaloneTasks = ref([])
 const activeTaskId = ref(null)
 const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activeTaskId.value))
+const isTasksOpen = ref(true)
 
 const selectTask = (id) => {
   activeTaskId.value = id
