@@ -10,10 +10,14 @@
   },
   "dependencies": {
     "@heroicons/vue": "^2.2.0",
+    "@tiptap/extension-color": "^3.22.4",
+    "@tiptap/extension-highlight": "^3.22.4",
+    "@tiptap/extension-text-style": "^3.22.4",
     "@tiptap/pm": "^3.22.4",
     "@tiptap/starter-kit": "^3.22.4",
     "@tiptap/vue-3": "^3.22.4",
     "pinia": "^3.0.4",
+    "tiptap-extension-global-drag-handle": "^0.1.18",
     "vue": "^3.5.13",
     "vue-router": "^4.6.4",
     "vuedraggable": "^4.1.0"

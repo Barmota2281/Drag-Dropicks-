@@ -85,17 +85,31 @@ import { ref, computed, onBeforeUnmount } from 'vue'
 import draggable from 'vuedraggable'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
+import Highlight from '@tiptap/extension-highlight'
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
+import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
 
 const isSidebarOpen = ref(true)
 const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 
 const createEditor = (content) => {
   return new Editor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+      Highlight,
+      GlobalDragHandle.configure({
+        dragHandleWidth: 20, // width of the generated drag handle
+        scrollTreshold: 100,
+        dragHandleSelector: '.custom-drag-handle' // Optional, but usually handled implicitly by the plugin
+      }),
+    ],
     content,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm xl:prose-base m-1 focus:outline-none',
+        class: 'prose prose-sm xl:prose-base m-1 focus:outline-none max-h-48 overflow-y-auto pl-6 relative',
       },
     },
   })
