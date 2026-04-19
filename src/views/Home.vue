@@ -1,5 +1,5 @@
 <script setup>
-  import KanbanBoard from "../components/KanbanBoard.vue";
+  import KanbanBoard from "../components/board/KanbanBoard.vue";
 
 </script>
 
