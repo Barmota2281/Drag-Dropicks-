@@ -46,10 +46,25 @@
           >
             <template #item="{element}">
               <div class="bg-[#f7f3e8] text-[#2b1f1a] p-3 rounded-lg shadow group relative transition-all duration-200 hover:-translate-y-0.5" >
-                <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing text-gray-500 hover:text-gray-800 tiptap-drag-handle">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+
+                <!-- Собственный Drag Handle с контекстным меню поверх -->
+                <div class="absolute left-[-15px] top-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div class="relative inline-block text-left" @mouseleave="element.showMenu = false">
+                    <button @click="element.showMenu = !element.showMenu" class="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-800 bg-gray-100 rounded tiptap-drag-handle">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                    </button>
+                    <!-- Всплывающее контекстное меню (Drag Context Menu) -->
+                    <div v-if="element.showMenu" class="absolute z-50 left-full top-0 ml-1 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div class="py-1" role="menu">
+                        <button @click="element.editor.chain().focus().toggleHeading({ level: 1 }).run(); element.showMenu = false" class="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100">Заголовок H1</button>
+                        <button @click="element.editor.chain().focus().toggleHighlight().run(); element.showMenu = false" class="text-gray-700 block px-4 py-2 text-sm w-full text-left hover:bg-gray-100">Выделить</button>
+                        <button @click="deleteTask(column.id, element.id)" class="text-red-600 block px-4 py-2 text-sm w-full text-left hover:bg-red-50">Удалить карточку</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <editor-content :editor="element.editor" class="focus:outline-none min-h-[40px] prose prose-sm max-w-none pr-6" />
+
+                <editor-content :editor="element.editor" class="focus:outline-none min-h-[40px] prose prose-sm max-w-none pr-2 pl-4" />
                 <div class="mt-2 text-xs text-gray-500 font-medium border-t border-gray-200 pt-1 flex justify-between">
                   <span>{{ new Date(element.createdAt).toLocaleDateString() }}</span>
                   <button @click="deleteTask(column.id, element.id)" class="text-red-500 hover:text-red-700">Удалить</button>
@@ -186,7 +201,8 @@ const addTask = (columnId) => {
     column.tasks.push({
       id: generateId(),
       editor: createEditor('<p>Новая задача...</p>'),
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      showMenu: false // Новое состояние для UI
     })
   }
 }
