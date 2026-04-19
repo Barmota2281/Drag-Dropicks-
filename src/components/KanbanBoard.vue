@@ -85,9 +85,9 @@ import { ref, computed, onBeforeUnmount } from 'vue'
 import draggable from 'vuedraggable'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import Highlight from '@tiptap/extension-highlight'
-import TextStyle from '@tiptap/extension-text-style'
-import Color from '@tiptap/extension-color'
+import { Highlight } from '@tiptap/extension-highlight'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
 
 const isSidebarOpen = ref(true)
