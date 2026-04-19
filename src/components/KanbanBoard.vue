@@ -4,7 +4,7 @@
       class="bg-[#3e2e25] transition-all duration-300 flex flex-col items-center py-5 border-r border-[#6b8e23]"
       :class="isSidebarOpen ? 'w-64' : 'w-16'"
     >
-      <button @click="toggleSidebar" class="mb-5 text-[#c7d297] hover:bg-[#6b8e23]/20 p-2 rounded-lg transition-colors w-full flex justify-center">
+      <button @click="toggleSidebar" class="mb-5  text-[#c7d297] hover:bg-[#6b8e23]/20 p-2 rounded-lg transition-colors w-full flex justify-center">
         <svg v-if="isSidebarOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path></svg>
         <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
       </button>
@@ -20,7 +20,7 @@
 
         <div class="mt-4 flex gap-2">
           <input v-model="newBoardTitle" @keyup.enter="addBoard" type="text" placeholder="Новая доска" class="w-full bg-[#2b1f1a] text-[#f7f3e8] border border-[#6b8e23] rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#c7d297]">
-          <button @click="addBoard" class="bg-[#6b8e23] text-[#2b1f1a] p-2 rounded hover:bg-[#a3b86c] transition-colors">
+          <button @click="addBoard" class="text-[#c7d297] p-2 rounded hover:bg-[#6b8e23]/20 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
@@ -83,7 +83,7 @@
           </draggable>
 
           <div class="mt-4 pt-4 border-t border-[#2b1f1a]">
-            <button @click="addTask(column.id)" class="w-full flex items-center gap-2 justify-center py-2 bg-[#2b1f1a]/50 text-[#a3b86c] hover:text-[#c7d297] hover:bg-[#2b1f1a] rounded transition-colors border border-transparent hover:border-[#6b8e23]">
+            <button @click="addTask(column.id)" class="w-full flex items-center gap-2 justify-center py-2 bg-transparent text-[#a3b86c] hover:text-[#c7d297] rounded transition-colors border border-transparent hover:border-[#6b8e23]">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
               Добавить карточку
             </button>
@@ -117,7 +117,7 @@
         <div class="flex justify-end gap-3 items-center">
           <button @click="deleteColumn(editingColumn.id)" class="text-red-500 hover:text-red-400 mr-auto text-sm">Удалить колонку</button>
           <button @click="closeEditColumn" class="text-gray-400 hover:text-white px-3 py-2 rounded">Отмена</button>
-          <button @click="saveColumnEdit" class="bg-[#6b8e23] text-[#2b1f1a] px-4 py-2 rounded hover:bg-[#a3b86c] transition-colors font-medium">Сохранить</button>
+          <button @click="saveColumnEdit" class="text-[#c7d297] px-4 py-2 rounded hover:bg-[#6b8e23]/20 transition-colors font-medium">Сохранить</button>
         </div>
       </div>
     </div>
