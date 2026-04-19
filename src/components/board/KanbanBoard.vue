@@ -209,6 +209,9 @@ import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
+import CharacterCount from '@tiptap/extension-character-count'
+import Emoji, { gitHubEmojis } from '@tiptap/extension-emoji'
+import emojiSuggestion from './emojiSuggestion.js'
 
 const router = useRouter()
 const goHome = () => {
@@ -251,6 +254,13 @@ const createEditor = (content) => {
       TextStyle,
       Color,
       Highlight,
+      CharacterCount.configure({
+        limit: 10000,
+      }),
+      Emoji.configure({
+        enableEmoticons: true,
+        suggestion: emojiSuggestion,
+      }),
       GlobalDragHandle.configure({
         dragHandleWidth: 20,
         scrollTreshold: 100,
