@@ -22,7 +22,7 @@
         <div v-for="board in boards" :key="board.id"
              @click="selectBoard(board.id)"
              class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
-             :class="activeBoardId === board.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-gray-400 dark:border-gray-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+             :class="currentView === 'board' && activeBoardId === board.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-gray-400 dark:border-gray-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
           {{ board.title }}
         </div>
 
@@ -32,13 +32,28 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
+
+        <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold mt-4 mb-2">Задачи</h2>
+        <div v-for="task in standaloneTasks" :key="task.id"
+             @click="selectTask(task.id)"
+             class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
+             :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-400 dark:border-blue-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+          {{ task.title || 'Новая задача' }}
+        </div>
+      </div>
+
+      <div v-if="isSidebarOpen" class="mt-auto w-full px-4 pb-6">
+        <button @click="goHome" class="w-full py-2 px-4 rounded-lg bg-transparent border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          Вернуться на главную
+        </button>
       </div>
     </div>
 
     <div class="flex-1 flex flex-col p-5 overflow-hidden">
-      <BoardHeader :board-title="activeBoard?.title" />
+      <BoardHeader :board-title="currentView === 'board' ? activeBoard?.title : 'Задача'" @add-task="addGeneralTask" />
 
-      <div v-if="activeBoard" class="flex gap-6 overflow-x-auto items-stretch pb-5 w-full flex-1 h-full">
+      <div v-if="currentView === 'board' && activeBoard" class="flex gap-6 overflow-x-auto items-stretch pb-5 w-full flex-1 h-full">
         <div v-for="column in activeBoard.columns" :key="column.id"
              class="flex-none w-80 bg-gray-100 dark:bg-gray-800 rounded-xl p-4 shadow-sm border-t-4 max-h-full flex flex-col transition-colors border-x border-b border-gray-200/50 dark:border-gray-700"
              :style="{ borderTopColor: column.color || '#9ca3af' }">
@@ -112,6 +127,32 @@
           </span>
         </div>
       </div>
+      <div v-else-if="currentView === 'task' && activeTask" class="flex-1 flex flex-col overflow-y-auto">
+        <div class="max-w-4xl w-full mx-auto pb-10">
+          <input v-model="activeTask.title" type="text" placeholder="Название задачи" class="w-full text-3xl font-bold text-gray-900 dark:text-gray-100 bg-transparent border-none focus:outline-none mb-6 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 min-h-[400px]">
+            <bubble-menu
+              :editor="activeTask.editor"
+              :tippy-options="{ duration: 100 }"
+              v-if="activeTask.editor"
+              class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden"
+            >
+              <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
+              <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
+              <button @click="activeTask.editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
+              <button @click="activeTask.editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
+              <button @click="activeTask.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
+             </bubble-menu>
+            <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none" />
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button @click="deleteStandaloneTask(activeTask.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-transparent rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors px-4 py-2 font-medium flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              Удалить задачу
+            </button>
+          </div>
+        </div>
+      </div>
       <div v-else class="flex-1 flex items-center justify-center">
         <div class="text-gray-500 dark:text-gray-400 text-xl font-medium">Выберите или создайте доску слева</div>
       </div>
@@ -144,7 +185,9 @@
 
 <script setup>
 import { ref, computed, onBeforeUnmount, onMounted, markRaw } from 'vue'
+import { useRouter } from 'vue-router'
 import draggable from 'vuedraggable'
+import BoardHeader from './BoardHeader.vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import { BubbleMenu } from '@tiptap/vue-3/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -152,7 +195,11 @@ import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
-import BoardHeader from './BoardHeader.vue'
+
+const router = useRouter()
+const goHome = () => {
+  router.push({ name: 'Home' })
+}
 
 const isDark = ref(false)
 const toggleTheme = () => {
@@ -255,11 +302,26 @@ const addBoard = () => {
     }
     boards.value.push(newBoard)
     activeBoardId.value = newBoard.id
+    currentView.value = 'board'
     newBoardTitle.value = ''
   }
 }
 
-const selectBoard = (id) => { activeBoardId.value = id }
+const currentView = ref('board') // 'board' or 'task'
+
+const selectBoard = (id) => {
+  activeBoardId.value = id
+  currentView.value = 'board'
+}
+
+const standaloneTasks = ref([])
+const activeTaskId = ref(null)
+const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activeTaskId.value))
+
+const selectTask = (id) => {
+  activeTaskId.value = id
+  currentView.value = 'task'
+}
 
 const addColumn = () => {
   if (activeBoard.value) {
@@ -315,6 +377,34 @@ const addTask = (columnId) => {
   }
 }
 
+const addGeneralTask = () => {
+  const newTaskId = generateId()
+  const newTask = {
+    id: newTaskId,
+    title: 'Новая задача',
+    editor: createEditor('<p>Начните писать здесь...</p>'),
+    createdAt: Date.now()
+  }
+  standaloneTasks.value.push(newTask)
+  activeTaskId.value = newTaskId
+  currentView.value = 'task'
+}
+
+const deleteStandaloneTask = (id) => {
+  if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+    const index = standaloneTasks.value.findIndex(t => t.id === id)
+    if (index !== -1) {
+      standaloneTasks.value[index].editor.destroy()
+      standaloneTasks.value.splice(index, 1)
+      if (standaloneTasks.value.length > 0) {
+        activeTaskId.value = standaloneTasks.value[0].id
+      } else {
+        currentView.value = 'board'
+      }
+    }
+  }
+}
+
 const deleteTask = (columnId, taskId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
@@ -332,6 +422,7 @@ onBeforeUnmount(() => {
       column.tasks.forEach(task => task.editor.destroy())
     })
   })
+  standaloneTasks.value.forEach(task => task.editor.destroy())
 })
 </script>
 
