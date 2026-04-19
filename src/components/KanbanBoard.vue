@@ -128,7 +128,8 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
 import draggable from 'vuedraggable'
-import { Editor, EditorContent, BubbleMenu } from '@tiptap/vue-3'
+import { Editor, EditorContent } from '@tiptap/vue-3'
+import { BubbleMenu } from '@tiptap/vue-3/menus'
 import StarterKit from '@tiptap/starter-kit'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
