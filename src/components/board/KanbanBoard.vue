@@ -136,10 +136,10 @@
           </span>
         </div>
       </div>
-      <div v-else-if="currentView === 'task' && activeTask" class="flex-1 flex flex-col overflow-y-auto">
+      <div v-else-if="currentView === 'task' && activeTask" class="flex-1 flex flex-col overflow-y-auto relative">
         <div class="max-w-4xl w-full mx-auto pb-10">
           <input v-model="activeTask.title" type="text" placeholder="Название задачи" class="w-full text-3xl font-bold text-gray-900 dark:text-gray-100 bg-transparent border-none focus:outline-none mb-6 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 min-h-[400px] relative">
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 min-h-[400px] relative" @contextmenu.prevent>
             <div class="custom-drag-handle flex items-center justify-center w-5 h-6 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-grab active:cursor-grabbing transition-colors z-50">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
             </div>
