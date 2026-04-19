@@ -36,7 +36,7 @@
     </div>
 
     <div class="flex-1 flex flex-col p-5 overflow-hidden">
-      <h1 class="text-gray-900 dark:text-gray-100 mb-7 text-3xl font-bold tracking-tight">{{ activeBoard?.title || 'Drag&Dropicks' }}</h1>
+      <BoardHeader :board-title="activeBoard?.title" />
 
       <div v-if="activeBoard" class="flex gap-6 overflow-x-auto items-stretch pb-5 w-full flex-1 h-full">
         <div v-for="column in activeBoard.columns" :key="column.id"
@@ -152,6 +152,7 @@ import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
+import BoardHeader from './BoardHeader.vue'
 
 const isDark = ref(false)
 const toggleTheme = () => {
