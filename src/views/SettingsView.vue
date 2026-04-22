@@ -65,6 +65,22 @@
                 <input type="radio" value="cyan" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
                 <div class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-cyan-500 transition-all dark:ring-offset-gray-800"></div>
               </label>
+              <label class="cursor-pointer" title="Индиго (Indigo)">
+                <input type="radio" value="indigo" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-indigo-500 transition-all dark:ring-offset-gray-800" style="background-color: #6366f1;"></div>
+              </label>
+              <label class="cursor-pointer" title="Фуксия (Fuchsia)">
+                <input type="radio" value="fuchsia" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-fuchsia-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-fuchsia-500 transition-all dark:ring-offset-gray-800" style="background-color: #d946ef;"></div>
+              </label>
+              <label class="cursor-pointer" title="Ярко-розовый (Rose)">
+                <input type="radio" value="rose" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-rose-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-rose-500 transition-all dark:ring-offset-gray-800" style="background-color: #f43f5e;"></div>
+              </label>
+              <label class="cursor-pointer" title="Лаймовый (Lime)">
+                <input type="radio" value="lime" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-lime-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-lime-500 transition-all dark:ring-offset-gray-800" style="background-color: #84cc16;"></div>
+              </label>
             </div>
 
             <div class="mt-6 p-4 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 transition-colors duration-500">
