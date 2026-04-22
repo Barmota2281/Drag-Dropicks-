@@ -49,6 +49,22 @@
                 <input type="radio" value="purple" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
                 <div class="w-8 h-8 rounded-full bg-purple-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-purple-500 transition-all dark:ring-offset-gray-800"></div>
               </label>
+              <label class="cursor-pointer" title="Изумрудный (Emerald)">
+                <input type="radio" value="emerald" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-emerald-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-emerald-500 transition-all dark:ring-offset-gray-800"></div>
+              </label>
+              <label class="cursor-pointer" title="Янтарный (Amber)">
+                <input type="radio" value="amber" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-amber-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-amber-500 transition-all dark:ring-offset-gray-800"></div>
+              </label>
+              <label class="cursor-pointer" title="Розовый (Pink)">
+                <input type="radio" value="pink" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-pink-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-pink-500 transition-all dark:ring-offset-gray-800"></div>
+              </label>
+              <label class="cursor-pointer" title="Голубой (Cyan)">
+                <input type="radio" value="cyan" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
+                <div class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-cyan-500 transition-all dark:ring-offset-gray-800"></div>
+              </label>
             </div>
           </div>
         </div>
