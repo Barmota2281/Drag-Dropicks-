@@ -22,7 +22,7 @@ const goToBoard = () => {
         </p>
 
         <div class="flex justify-center gap-4">
-          <button @click="goToBoard" class="px-8 py-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-lg font-semibold rounded-xl hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-lg">
+          <button @click="goToBoard" class="px-8 py-4 bg-accent-600 text-white text-lg font-semibold rounded-xl hover:bg-accent-700 transition-colors shadow-lg shadow-accent-500/30">
             Перейти к доске
           </button>
         </div>

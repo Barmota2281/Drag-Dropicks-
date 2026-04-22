@@ -7,7 +7,7 @@
         </span>
       </div>
       <nav class="flex items-center gap-4">
-        <button @click="router.push('/board')" class="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm">
+        <button @click="router.push('/board')" class="px-4 py-2 bg-accent-600 text-white text-sm font-medium rounded-lg hover:bg-accent-700 transition-colors shadow-sm">
           Открыть доску
         </button>
         <div class="relative" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false">

@@ -22,13 +22,13 @@
         <div v-for="board in boards" :key="board.id"
              @click="selectBoard(board.id)"
              class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
-             :class="currentView === 'board' && activeBoardId === board.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-gray-400 dark:border-gray-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+             :class="currentView === 'board' && activeBoardId === board.id ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400 border-l-2 border-accent-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
           {{ board.title }}
         </div>
 
         <div class="mt-4 flex gap-2">
-          <input v-model="newBoardTitle" @keyup.enter="addBoard" type="text" placeholder="Новая доска" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400 transition-colors">
-          <button @click="addBoard" class="text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors border border-transparent">
+          <input v-model="newBoardTitle" @keyup.enter="addBoard" type="text" placeholder="Новая доска" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors">
+          <button @click="addBoard" class="text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
           </button>
         </div>
@@ -43,7 +43,7 @@
           <div v-for="task in standaloneTasks" :key="task.id"
                @click="selectTask(task.id)"
                class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
-               :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-accent-400 dark:border-accent-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+               :class="currentView === 'task' && activeTaskId === task.id ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400 border-l-2 border-accent-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
             {{ task.title || 'Новая задача' }}
           </div>
         </div>
@@ -126,15 +126,15 @@
           </draggable>
 
           <div class="mt-2 pt-3 border-t border-gray-200 dark:border-gray-700">
-            <button @click="addTask(column.id)" class="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 bg-transparent rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <button @click="addTask(column.id)" class="w-full flex items-center justify-center gap-2 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 bg-transparent rounded-lg hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-colors">
               <svg class="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
               Добавить карточку
             </button>
           </div>
         </div>
 
-        <div class="flex-none w-80 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-gray-200/50 dark:hover:bg-gray-800 transition-colors" @click="addColumn">
-          <span class="text-gray-500 dark:text-gray-400 font-medium flex items-center gap-2">
+        <div class="flex-none w-80 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 flex items-center justify-center cursor-pointer hover:bg-accent-50 dark:hover:bg-accent-900/20 hover:border-accent-500 transition-colors group" @click="addColumn">
+          <span class="text-gray-500 dark:text-gray-400 group-hover:text-accent-600 dark:group-hover:text-accent-400 font-medium flex items-center gap-2 transition-colors">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
             Добавить колонку
           </span>
