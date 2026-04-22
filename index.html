@@ -4,9 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png?v=2" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Vue</title>
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" /> -->
+    <title>Drag&Dropicks</title>
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'system';
+        const isDark = savedTheme === 'dark' || (savedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+
+        const savedColor = localStorage.getItem('colorScheme');
+        if (savedColor) {
+          document.documentElement.setAttribute('data-theme', savedColor);
+        }
+      })();
+    </script>
   </head>
-  <body>
+  <body class="bg-gray-50 text-gray-900 transition-colors duration-300">
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

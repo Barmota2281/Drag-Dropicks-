@@ -20,6 +20,7 @@
         <div v-show="isMenuOpen" class="absolute right-0 top-full pt-2 z-10 w-48">
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 overflow-hidden">
             <button @click="goToProfile" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Открыть профиль</button>
+            <button @click="openSettings" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Настройки</button>
             <button @click="switchAccount" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Сменить аккаунт</button>
             <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors">Выйти из профиля</button>
           </div>
@@ -49,6 +50,11 @@ const isMenuOpen = ref(false)
 const goToProfile = () => {
   isMenuOpen.value = false
   router.push({ name: 'Profile' })
+}
+
+const openSettings = () => {
+  isMenuOpen.value = false
+  router.push({ name: 'Settings' })
 }
 
 const switchAccount = () => {

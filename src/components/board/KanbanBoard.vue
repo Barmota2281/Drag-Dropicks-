@@ -34,7 +34,7 @@
         </div>
 
         <div class="mt-4 flex items-center justify-between mb-2">
-          <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold cursor-pointer hover:text-blue-500 transition-colors flex items-center gap-1" @click="isTasksOpen = !isTasksOpen">
+          <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold cursor-pointer hover:text-accent-500 transition-colors flex items-center gap-1" @click="isTasksOpen = !isTasksOpen">
             <svg class="w-4 h-4 transition-transform" :class="{'rotate-90': isTasksOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             Задачи
           </h2>
@@ -43,7 +43,7 @@
           <div v-for="task in standaloneTasks" :key="task.id"
                @click="selectTask(task.id)"
                class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
-               :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-blue-400 dark:border-blue-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
+               :class="currentView === 'task' && activeTaskId === task.id ? 'bg-gray-100 dark:bg-gray-700 border-l-2 border-accent-400 dark:border-accent-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
             {{ task.title || 'Новая задача' }}
           </div>
         </div>
@@ -103,6 +103,10 @@
                   <button @click="element.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
                   <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
                   <input type="color" @input="(event) => element.editor.chain().focus().setColor(event.target.value).run()" :value="element.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста" />
+                  <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                  <button @click="copySelection(element.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать выделенное">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                  </button>
                  </bubble-menu>
 
                 <!-- Хендл для перетаскивания задачи (по клику сюда перетаскивается вся карточка) -->
@@ -156,6 +160,10 @@
               <button @click="activeTask.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
               <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
               <input type="color" @input="(event) => activeTask.editor.chain().focus().setColor(event.target.value).run()" :value="activeTask.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста" />
+              <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+              <button @click="copySelection(activeTask.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать выделенное">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              </button>
              </bubble-menu>
             <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none" />
           </div>
@@ -258,6 +266,8 @@ const createEditor = (content) => {
         limit: 10000,
       }),
       Emoji.configure({
+        emojis: gitHubEmojis,
+        forceFallbackImages: true,
         enableEmoticons: true,
         suggestion: emojiSuggestion,
       }),
@@ -342,6 +352,15 @@ const standaloneTasks = ref([])
 const activeTaskId = ref(null)
 const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activeTaskId.value))
 const isTasksOpen = ref(true)
+
+const copySelection = (editor) => {
+  if (!editor) return
+  const { from, to } = editor.state.selection
+  const text = editor.state.doc.textBetween(from, to, ' ')
+  if (text) {
+    navigator.clipboard.writeText(text).catch(err => console.error('Copy failed', err))
+  }
+}
 
 const selectTask = (id) => {
   activeTaskId.value = id

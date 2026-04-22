@@ -2,12 +2,12 @@
   <header class="w-full bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 shrink-0">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex-shrink-0 flex items-center">
-        <span class="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          Drag<span class="text-blue-500">&</span>Dropicks
+        <span @click="router.push('/')" class="text-2xl font-bold text-gray-900 dark:text-gray-100 cursor-pointer">
+          Drag<span class="text-accent-500">&</span>Dropicks
         </span>
       </div>
       <nav class="flex items-center gap-4">
-        <button @click="$emit('go-to-board')" class="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm">
+        <button @click="router.push('/board')" class="px-4 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm">
           Открыть доску
         </button>
         <div class="relative" @mouseenter="isMenuOpen = true" @mouseleave="isMenuOpen = false">
@@ -17,6 +17,7 @@
           <div v-show="isMenuOpen" class="absolute right-0 top-full pt-2 z-10 w-48">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 overflow-hidden">
               <button @click="openProfile" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Открыть профиль</button>
+              <button @click="openSettings" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Настройки</button>
               <button @click="switchAccount" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Сменить аккаунт</button>
               <button @click="logout" class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-gray-700 transition-colors">Выйти из профиля</button>
             </div>
@@ -29,14 +30,19 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
-const emit = defineEmits(['go-to-board', 'go-to-profile'])
-
+const router = useRouter()
 const isMenuOpen = ref(false)
 
 const openProfile = () => {
   isMenuOpen.value = false
-  emit('go-to-profile')
+  router.push('/profile')
+}
+
+const openSettings = () => {
+  isMenuOpen.value = false
+  router.push('/settings')
 }
 
 const switchAccount = () => {
