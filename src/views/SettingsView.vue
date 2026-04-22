@@ -66,6 +66,19 @@
                 <div class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-cyan-500 transition-all dark:ring-offset-gray-800"></div>
               </label>
             </div>
+
+            <div class="mt-6 p-4 rounded-xl bg-accent-50 dark:bg-accent-900/20 border border-accent-200 dark:border-accent-800 transition-colors duration-500">
+              <h4 class="text-sm font-semibold text-accent-700 dark:text-accent-300 mb-2">Предпросмотр акцента</h4>
+              <div class="flex items-center gap-3">
+                <button class="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm">
+                  Пример кнопки
+                </button>
+                <span class="text-sm text-accent-600 dark:text-accent-400 font-medium cursor-pointer hover:underline">
+                  Пример ссылки
+                </span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
