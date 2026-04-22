@@ -219,6 +219,14 @@ import draggable from 'vuedraggable'
 import BoardHeader from './BoardHeader.vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import { BubbleMenu } from '@tiptap/vue-3/menus'
+import StarterKit from '@tiptap/starter-kit'
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
+import CharacterCount from '@tiptap/extension-character-count'
+import { Emoji, gitHubEmojis } from '@tiptap/extension-emoji'
+import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
+import { emojiSuggestion } from './emojiSuggestion.js'
 
 const router = useRouter()
 const goHome = () => {
