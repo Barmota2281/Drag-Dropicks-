@@ -21,19 +21,26 @@
         <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold mb-2">Доски</h2>
         <div v-for="board in boards" :key="board.id"
              @click="selectBoard(board.id)"
-             class="p-2 rounded cursor-pointer transition-colors text-gray-700 dark:text-gray-300 flex items-center"
+             class="cursor-pointer px-3 py-2 rounded-lg text-sm transition-colors mb-1 truncate flex items-center gap-2"
              :class="currentView === 'board' && activeBoardId === board.id ? 'bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-400 border-l-2 border-accent-500 font-medium shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-l-2 border-transparent'">
           {{ board.title }}
         </div>
 
-        <div class="mt-4 flex gap-2">
-          <input v-model="newBoardTitle" @keyup.enter="addBoard" type="text" placeholder="Новая доска" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors">
-          <button @click="addBoard" class="text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-          </button>
+        <div class="mt-4 flex flex-col gap-2">
+          <input v-model="newBoardTitle" @keyup.enter="addBoard" type="text" placeholder="Название новой доски" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors">
+          <div class="flex gap-2">
+            <select v-model="newBoardTemplate" class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors text-gray-700 dark:text-gray-300">
+              <template v-for="tmpl in boardTemplates" :key="tmpl.id">
+                <option :value="tmpl.id">{{ tmpl.name }}</option>
+              </template>
+            </select>
+            <button @click="addBoard" class="flex-shrink-0 text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent" title="Создать доску">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+          </div>
         </div>
 
-        <div class="mt-4 flex items-center justify-between mb-2">
+        <div class="mt-8 flex items-center justify-between mb-2">
           <h2 class="text-gray-800 dark:text-gray-200 text-xl font-bold cursor-pointer hover:text-accent-500 transition-colors flex items-center gap-1" @click="isTasksOpen = !isTasksOpen">
             <svg class="w-4 h-4 transition-transform" :class="{'rotate-90': isTasksOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             Задачи
@@ -212,14 +219,6 @@ import draggable from 'vuedraggable'
 import BoardHeader from './BoardHeader.vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import { BubbleMenu } from '@tiptap/vue-3/menus'
-import StarterKit from '@tiptap/starter-kit'
-import { Highlight } from '@tiptap/extension-highlight'
-import { TextStyle } from '@tiptap/extension-text-style'
-import { Color } from '@tiptap/extension-color'
-import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
-import CharacterCount from '@tiptap/extension-character-count'
-import Emoji, { gitHubEmojis } from '@tiptap/extension-emoji'
-import emojiSuggestion from './emojiSuggestion.js'
 
 const router = useRouter()
 const goHome = () => {
@@ -319,20 +318,33 @@ const boards = ref([
   }
 ])
 
-const activeBoardId = ref('b1')
+const activeBoardId = ref(null)
 const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
 
 const newBoardTitle = ref('')
+const newBoardTemplate = ref('basic')
+
+const boardTemplates = [
+  { id: 'empty', name: 'Пустая доска', columns: [] },
+  { id: 'basic', name: 'Базовый Канбан', columns: ['К выполнению', 'В процессе', 'Готово'] },
+  { id: 'dev', name: 'Разработка ПО', columns: ['Бэклог', 'В планах', 'В работе', 'Ревью', 'Готово'] },
+  { id: 'week', name: 'Недельный план', columns: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Выходные'] },
+  { id: 'marketing', name: 'Маркетинг', columns: ['Идеи 💡', 'В производстве 📝', 'На проверке 👀', 'Опубликовано 🚀'] }
+]
+
 const addBoard = () => {
   if (newBoardTitle.value.trim()) {
+    const template = boardTemplates.find(t => t.id === newBoardTemplate.value) || boardTemplates[1];
+    const columns = template.columns.map(title => ({
+      id: generateId(),
+      title,
+      tasks: []
+    }));
+
     const newBoard = {
       id: generateId(),
       title: newBoardTitle.value.trim(),
-      columns: [
-        { id: generateId(), title: 'К выполнению', tasks: [] },
-        { id: generateId(), title: 'В процессе', tasks: [] },
-        { id: generateId(), title: 'Готово', tasks: [] }
-      ]
+      columns
     }
     boards.value.push(newBoard)
     activeBoardId.value = newBoard.id
