@@ -1,8 +1,8 @@
 <template>
   <div class="flex h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans overflow-hidden transition-colors duration-300">
     <div
-      class="transition-all duration-300 flex flex-col items-center py-5 border-r z-20"
-      :class="isSidebarOpen ? 'w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'w-16 bg-transparent border-transparent shadow-none'"
+        class="transition-all duration-300 flex flex-col items-center py-5 border-r z-20"
+        :class="isSidebarOpen ? 'w-64 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700' : 'w-16 bg-transparent border-transparent shadow-none'"
     >
       <div class="flex w-full px-4 gap-2 mb-5">
         <button @click="toggleSidebar"
@@ -65,7 +65,7 @@
     </div>
 
     <div class="flex-1 flex flex-col p-5 overflow-hidden">
-      <BoardHeader :board-title="currentView === 'board' ? activeBoard?.title : 'Задача'" @add-task="addGeneralTask" />
+      <BoardHeader :board-title="currentView === 'board' ? activeBoard?.title : 'Задача'" :boards="boards" @add-task="addGeneralTask" @jump-to-task="handleJumpToTask" />
 
       <div v-if="currentView === 'board' && activeBoard" class="flex gap-6 overflow-x-auto items-stretch pb-5 w-full flex-1 h-full">
         <div v-for="column in activeBoard.columns" :key="column.id"
@@ -82,26 +82,26 @@
           </div>
 
           <draggable
-            v-model="column.tasks"
-            group="tasks"
-            item-key="id"
-            handle=".task-handle"
-            :animation="200"
-            :force-fallback="true"
-            fallback-class="sortable-fallback"
-            class="flex-1 flex flex-col gap-3 overflow-y-auto min-h-[150px] p-1 pb-6"
-            ghost-class="sortable-ghost"
-            drag-class="sortable-drag"
+              v-model="column.tasks"
+              group="tasks"
+              item-key="id"
+              handle=".task-handle"
+              :animation="200"
+              :force-fallback="true"
+              fallback-class="sortable-fallback"
+              class="flex-1 flex flex-col gap-3 overflow-y-auto min-h-[150px] p-1 pb-6"
+              ghost-class="sortable-ghost"
+              drag-class="sortable-drag"
           >
             <template #item="{element}">
               <div class="bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 p-3 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 group relative transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md" >
 
                 <!-- Стандартный Bubble/Floating Menu от Tiptap для имитации контекстного меню -->
                 <bubble-menu
-                  :editor="element.editor"
-                  :tippy-options="{ duration: 100 }"
-                  v-if="element.editor"
-                  class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
+                    :editor="element.editor"
+                    :tippy-options="{ duration: 100 }"
+                    v-if="element.editor"
+                    class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
                 >
                   <button @click="element.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
                   <button @click="element.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': element.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
@@ -114,7 +114,7 @@
                   <button @click="copySelection(element.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать выделенное">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
                   </button>
-                 </bubble-menu>
+                </bubble-menu>
 
                 <!-- Хендл для перетаскивания задачи (по клику сюда перетаскивается вся карточка) -->
                 <div class="task-handle absolute right-2 top-2 opacity-50 hover:opacity-100 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing text-gray-500 dark:text-gray-400 transition-all z-10" title="Перетащить карточку">
@@ -155,10 +155,10 @@
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
             </div>
             <bubble-menu
-              :editor="activeTask.editor"
-              :tippy-options="{ duration: 100 }"
-              v-if="activeTask.editor"
-              class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
+                :editor="activeTask.editor"
+                :tippy-options="{ duration: 100 }"
+                v-if="activeTask.editor"
+                class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center"
             >
               <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
               <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
@@ -171,7 +171,7 @@
               <button @click="copySelection(activeTask.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать выделенное">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
               </button>
-             </bubble-menu>
+            </bubble-menu>
             <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none" />
           </div>
           <div class="mt-4 flex justify-end">
@@ -418,6 +418,16 @@ const selectTask = (id) => {
   currentView.value = 'task'
 }
 
+const handleJumpToTask = ({ boardId, columnId, taskId }) => {
+  activeBoardId.value = boardId
+  currentView.value = 'board'
+  // highlight the card after next tick
+  setTimeout(() => {
+    const el = document.querySelector(`[data-task-id="${taskId}"]`)
+    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('ring-2', 'ring-accent-500'); setTimeout(() => el.classList.remove('ring-2', 'ring-accent-500'), 2000) }
+  }, 150)
+}
+
 const addColumn = async () => {
   if (activeBoard.value) {
     const title = prompt('Название колонки:')
@@ -463,9 +473,9 @@ const saveColumnEdit = async () => {
         col.title = editColData.value.title
         col.color = editColData.value.color
       } catch (e) {
-         console.error('Ошибка сохранения колонки', e);
-         col.title = editColData.value.title
-         col.color = editColData.value.color
+        console.error('Ошибка сохранения колонки', e);
+        col.title = editColData.value.title
+        col.color = editColData.value.color
       }
     }
     closeEditColumn()

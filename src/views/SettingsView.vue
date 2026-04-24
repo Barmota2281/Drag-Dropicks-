@@ -65,7 +65,7 @@
                 <input type="radio" value="cyan" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
                 <div class="w-8 h-8 rounded-full bg-cyan-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-cyan-500 transition-all dark:ring-offset-gray-800"></div>
               </label>
-              <label class="cursor-pointer" title="Индиго (Indigo)">
+                <label class="cursor-pointer" title="Индиго (Indigo)">
                 <input type="radio" value="indigo" v-model="colorScheme" @change="updateColorScheme" class="peer sr-only">
                 <div class="w-8 h-8 rounded-full bg-indigo-500 ring-2 ring-offset-2 ring-transparent peer-checked:ring-indigo-500 transition-all dark:ring-offset-gray-800" style="background-color: #6366f1;"></div>
               </label>
