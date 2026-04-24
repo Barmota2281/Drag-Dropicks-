@@ -220,18 +220,23 @@ import BoardHeader from './BoardHeader.vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import { BubbleMenu } from '@tiptap/vue-3/menus'
 import StarterKit from '@tiptap/starter-kit'
-import TextStyle from '@tiptap/extension-text-style'
-import Color from '@tiptap/extension-color'
-import Highlight from '@tiptap/extension-highlight'
-import CharacterCount from '@tiptap/extension-character-count'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
+import { Highlight } from '@tiptap/extension-highlight'
+import { CharacterCount } from '@tiptap/extension-character-count'
 import { Emoji, gitHubEmojis } from '@tiptap/extension-emoji'
+import api from '../../api'
 import GlobalDragHandle from 'tiptap-extension-global-drag-handle'
-import { emojiSuggestion } from './emojiSuggestion.js'
+import emojiSuggestion from './emojiSuggestion.js'
+
 
 const router = useRouter()
 const goHome = () => {
   router.push({ name: 'Home' })
 }
+
+const isSidebarOpen = ref(true)
+const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
 
 const isDark = ref(false)
 const toggleTheme = () => {
@@ -242,6 +247,53 @@ const toggleTheme = () => {
   } else {
     document.documentElement.classList.remove('dark')
     localStorage.setItem('theme', 'light')
+  }
+}
+
+const generateId = () => Math.random().toString(36).substr(2, 9)
+
+const boards = ref([])
+const activeBoardId = ref(null)
+
+const loadBoards = async () => {
+  try {
+    const response = await api.get('/boards');
+    const fetchedBoards = response.data;
+
+    // Преобразуем данные бэкенда для отображения
+    boards.value = fetchedBoards.map(board => ({
+      ...board,
+      columns: board.columns ? board.columns.map(col => ({
+        ...col,
+        tasks: col.tasks ? col.tasks.map(task => ({
+          ...task,
+          editor: createEditor(task.content || '<p></p>')
+        })) : []
+      })) : []
+    }));
+
+    if (boards.value.length > 0 && !activeBoardId.value) {
+      activeBoardId.value = boards.value[0].id;
+    }
+  } catch (error) {
+    console.error('Ошибка загрузки досок:', error);
+    // Фолбек для разработки
+    boards.value = [
+      {
+        id: 'b1',
+        title: 'Моя первая доска (локальная)',
+        columns: [
+          {
+            id: 'c1',
+            title: 'К выполнению',
+            tasks: [
+              { id: 't1', editor: createEditor('<p><strong>Создать дизайн</strong> доски</p>'), createdAt: Date.now() },
+              { id: 't4', editor: createEditor('<p>Настроить WebSockets</p>'), createdAt: Date.now() }
+            ]
+          }
+        ]
+      }
+    ]
   }
 }
 
@@ -257,10 +309,12 @@ onMounted(() => {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
+
+  // Загружаем доски сразу
+  loadBoards();
 })
 
-const isSidebarOpen = ref(true)
-const toggleSidebar = () => { isSidebarOpen.value = !isSidebarOpen.value }
+const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
 
 const createEditor = (content) => {
   return markRaw(new Editor({
@@ -293,42 +347,6 @@ const createEditor = (content) => {
   }))
 }
 
-const generateId = () => Math.random().toString(36).substr(2, 9)
-
-const boards = ref([
-  {
-    id: 'b1',
-    title: 'Моя первая доска',
-    columns: [
-      {
-        id: 'c1',
-        title: 'К выполнению',
-        tasks: [
-          { id: 't1', editor: createEditor('<p><strong>Создать дизайн</strong> доски</p>'), createdAt: Date.now() },
-          { id: 't4', editor: createEditor('<p>Настроить WebSockets</p>'), createdAt: Date.now() }
-        ]
-      },
-      {
-        id: 'c2',
-        title: 'В процессе',
-        tasks: [
-          { id: 't2', editor: createEditor('<p>Написать базовый код</p>'), createdAt: Date.now() }
-        ]
-      },
-      {
-        id: 'c3',
-        title: 'Готово',
-        tasks: [
-          { id: 't3', editor: createEditor('<h3>Установить Vue.js</h3>'), createdAt: Date.now() }
-        ]
-      }
-    ]
-  }
-])
-
-const activeBoardId = ref(null)
-const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
-
 const newBoardTitle = ref('')
 const newBoardTemplate = ref('basic')
 
@@ -340,24 +358,37 @@ const boardTemplates = [
   { id: 'marketing', name: 'Маркетинг', columns: ['Идеи 💡', 'В производстве 📝', 'На проверке 👀', 'Опубликовано 🚀'] }
 ]
 
-const addBoard = () => {
+const addBoard = async () => {
   if (newBoardTitle.value.trim()) {
     const template = boardTemplates.find(t => t.id === newBoardTemplate.value) || boardTemplates[1];
     const columns = template.columns.map(title => ({
-      id: generateId(),
       title,
-      tasks: []
+      tasks: [] // задачи для бэкенда
     }));
 
-    const newBoard = {
-      id: generateId(),
-      title: newBoardTitle.value.trim(),
-      columns
+    try {
+      const response = await api.post('/boards', {
+        title: newBoardTitle.value.trim(),
+        columns
+      });
+      const newBoard = response.data;
+
+      // Инициализируем редакторы для задач, если они есть
+      if (newBoard.columns) {
+        newBoard.columns.forEach(col => {
+          if (col.tasks) {
+            col.tasks.forEach(task => { task.editor = createEditor(task.content || ''); });
+          } else { col.tasks = []; }
+        });
+      }
+
+      boards.value.push(newBoard)
+      activeBoardId.value = newBoard.id
+      currentView.value = 'board'
+      newBoardTitle.value = ''
+    } catch (e) {
+      console.error('Не удалось создать доску на бэкенде', e);
     }
-    boards.value.push(newBoard)
-    activeBoardId.value = newBoard.id
-    currentView.value = 'board'
-    newBoardTitle.value = ''
   }
 }
 
@@ -387,11 +418,22 @@ const selectTask = (id) => {
   currentView.value = 'task'
 }
 
-const addColumn = () => {
+const addColumn = async () => {
   if (activeBoard.value) {
     const title = prompt('Название колонки:')
     if (title?.trim()) {
-      activeBoard.value.columns.push({ id: generateId(), title: title.trim(), color: '#9ca3af', tasks: [] })
+      try {
+        const response = await api.post(`/boards/${activeBoard.value.id}/columns`, {
+          title: title.trim(),
+          color: '#9ca3af'
+        });
+        const newColumn = response.data;
+
+        activeBoard.value.columns.push({ ...newColumn, tasks: [] });
+      } catch (e) {
+        // Локальный фолбек
+        activeBoard.value.columns.push({ id: generateId(), title: title.trim(), color: '#9ca3af', tasks: [] })
+      }
     }
   }
 }
@@ -409,39 +451,68 @@ const closeEditColumn = () => {
   editingColumn.value = null
 }
 
-const saveColumnEdit = () => {
+const saveColumnEdit = async () => {
   if (editingColumn.value && activeBoard.value) {
     const col = activeBoard.value.columns.find(c => c.id === editingColumn.value.id)
     if (col) {
-      col.title = editColData.value.title
-      col.color = editColData.value.color
+      try {
+        await api.put(`/columns/${col.id}`, {
+          title: editColData.value.title,
+          color: editColData.value.color
+        });
+        col.title = editColData.value.title
+        col.color = editColData.value.color
+      } catch (e) {
+         console.error('Ошибка сохранения колонки', e);
+         col.title = editColData.value.title
+         col.color = editColData.value.color
+      }
     }
     closeEditColumn()
   }
 }
 
-const deleteColumn = (columnId) => {
+const deleteColumn = async (columnId) => {
   if (confirm('Вы уверены, что хотите удалить эту колонку со всеми задачами?')) {
     if (activeBoard.value) {
-      activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
+      try {
+        await api.delete(`/columns/${columnId}`);
+        activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
+      } catch (e) {
+        console.error('Ошибка при удалении', e);
+        activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
+      }
     }
     closeEditColumn()
   }
 }
 
-const addTask = (columnId) => {
+const addTask = async (columnId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
-    column.tasks.push({
-      id: generateId(),
-      editor: createEditor('<p>Новая задача...</p>'),
-      createdAt: Date.now(),
-      showMenu: false // Новое состояние для UI
-    })
+    try {
+      const response = await api.post(`/columns/${columnId}/tasks`, {
+        content: '<p>Новая задача...</p>'
+      });
+      const newTaskData = response.data;
+
+      column.tasks.push({
+        ...newTaskData,
+        editor: createEditor(newTaskData.content),
+        showMenu: false
+      })
+    } catch (e) {
+      column.tasks.push({
+        id: generateId(),
+        editor: createEditor('<p>Новая задача...</p>'),
+        createdAt: Date.now(),
+        showMenu: false // Новое состояние для UI
+      })
+    }
   }
 }
 
-const addGeneralTask = () => {
+const addGeneralTask = async () => {
   const newTaskId = generateId()
   const newTask = {
     id: newTaskId,
@@ -469,13 +540,22 @@ const deleteStandaloneTask = (id) => {
   }
 }
 
-const deleteTask = (columnId, taskId) => {
+const deleteTask = async (columnId, taskId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
-    const index = column.tasks.findIndex(t => t.id === taskId)
-    if (index !== -1) {
-      column.tasks[index].editor.destroy()
-      column.tasks.splice(index, 1)
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      const index = column.tasks.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        column.tasks[index].editor.destroy()
+        column.tasks.splice(index, 1)
+      }
+    } catch (e) {
+      const index = column.tasks.findIndex(t => t.id === taskId)
+      if (index !== -1) {
+        column.tasks[index].editor.destroy()
+        column.tasks.splice(index, 1)
+      }
     }
   }
 }
