@@ -3,6 +3,9 @@ import Home from '../views/Home.vue'
 import BoardView from '../views/BoardView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import { authService } from '../services/auth.service'
 
 const routes = [
     {
@@ -11,25 +14,47 @@ const routes = [
         component: Home
     },
     {
+        path: '/login',
+        name: 'Login',
+        component: LoginView
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: RegisterView
+    },
+    {
         path: '/board',
         name: 'Board',
-        component: BoardView
+        component: BoardView,
+        meta: { requiresAuth: true }
     },
     {
         path: '/profile',
         name: 'Profile',
-        component: ProfileView
+        component: ProfileView,
+        meta: { requiresAuth: true }
     },
     {
         path: '/settings',
         name: 'Settings',
-        component: SettingsView
+        component: SettingsView,
+        meta: { requiresAuth: true }
     }
 ]
 
 const router = createRouter({
     history: createWebHistory(),
     routes
+})
+
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = authService.isAuthenticated();
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login');
+  } else {
+    next();
+  }
 })
 
 export default router
