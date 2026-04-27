@@ -19,7 +19,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="Поиск задач по всем доскам..."
-            class="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all focus:bg-white shadow-sm"
+            class="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all focus:bg-gray-50 dark:focus:bg-gray-800 shadow-sm"
             @focus="isSearchOpen = true"
             @keydown.escape="closeSearch"
             @keydown.down.prevent="moveSelection(1)"
@@ -114,14 +114,17 @@
       <!-- Profile -->
       <div class="relative shrink-0" ref="profileRef">
         <button @click="isProfileOpen = !isProfileOpen" class="flex items-center gap-1.5 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">U</div>
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden">
+            <img v-if="userAvatar" :src="userAvatar" alt="Avatar" class="w-full h-full object-cover" />
+            <span v-else>{{ userInitial }}</span>
+          </div>
           <svg class="w-3.5 h-3.5 text-gray-400 hidden sm:block transition-transform" :class="{ 'rotate-180': isProfileOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
         </button>
         <Transition enter-active-class="transition duration-150 ease-out" enter-from-class="opacity-0 scale-95 translate-y-1" enter-to-class="opacity-100 scale-100 translate-y-0" leave-active-class="transition duration-100 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0 scale-95">
           <div v-if="isProfileOpen" class="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
               <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Мой аккаунт</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">user@example.com</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{{ userEmail }}</div>
             </div>
             <div class="py-1">
               <button @click="nav('/profile')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2.5">
@@ -149,10 +152,12 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '../../services/auth.service.js'
 
 const props = defineProps({
   boardTitle: { type: String, default: 'Drag&Dropicks' },
-  boards: { type: Array, default: () => [] }
+  boards: { type: Array, default: () => [] },
+  standaloneTasks: { type: Array, default: () => [] }
 })
 const emit = defineEmits(['add-task', 'jump-to-task'])
 
@@ -165,12 +170,20 @@ const isProfileOpen = ref(false)
 const searchQuery = ref('')
 const selectedIndex = ref(-1)
 const recentSearches = ref(JSON.parse(localStorage.getItem('dnp_recent_searches') || '[]'))
+const userEmail = ref('user@example.com')
+const userAvatar = ref(null)
+
+const userInitial = computed(() => {
+  return userEmail.value ? userEmail.value.charAt(0).toUpperCase() : 'U'
+})
 
 const searchResults = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
-  if (!q || !props.boards?.length) return []
+  if (!q && (!props.boards?.length && !props.standaloneTasks?.length)) return []
+  if (!q) return []
   const results = []
-  props.boards.forEach(board => {
+
+  props.boards?.forEach(board => {
     board.columns?.forEach(col => {
       col.tasks?.forEach(task => {
         const text = task.editor?.getText?.() || ''
@@ -179,12 +192,28 @@ const searchResults = computed(() => {
             boardId: board.id, boardTitle: board.title,
             columnId: col.id, columnTitle: col.title, columnColor: col.color,
             taskId: task.id, text: text.trim() || '(без текста)',
-            createdAt: task.createdAt, globalIndex: results.length
+            createdAt: task.createdAt, globalIndex: results.length,
+            isStandalone: false
           })
         }
       })
     })
   })
+
+  props.standaloneTasks?.forEach(task => {
+    const text = task.editor?.getText?.() || ''
+    const title = task.title || ''
+    if (text.toLowerCase().includes(q) || title.toLowerCase().includes(q)) {
+      results.push({
+        boardId: null, boardTitle: 'Общие задачи',
+        columnId: null, columnTitle: '-', columnColor: '#9ca3af',
+        taskId: task.id, text: (title + ' ' + text).trim() || '(без текста)',
+        createdAt: task.createdAt, globalIndex: results.length,
+        isStandalone: true
+      })
+    }
+  })
+
   return results
 })
 
@@ -227,7 +256,7 @@ const clearRecent = () => { recentSearches.value = []; localStorage.removeItem('
 
 const selectResult = (item) => {
   saveRecent(searchQuery.value)
-  emit('jump-to-task', { boardId: item.boardId, columnId: item.columnId, taskId: item.taskId })
+  emit('jump-to-task', { boardId: item.boardId, columnId: item.columnId, taskId: item.taskId, isStandalone: item.isStandalone })
   closeSearch()
 }
 
@@ -259,9 +288,23 @@ const handleClickOutside = (e) => {
   if (profileRef.value && !profileRef.value.contains(e.target)) isProfileOpen.value = false
 }
 
-onMounted(() => {
+onMounted(async () => {
   document.addEventListener('keydown', handleKeydown)
   document.addEventListener('click', handleClickOutside)
+
+  if (authService.isAuthenticated()) {
+    try {
+      const profile = await authService.getProfile()
+      if (profile && profile.email) {
+        userEmail.value = profile.email
+      }
+      if (profile && (profile.avatarURL || profile.avatarUrl)) {
+        userAvatar.value = profile.avatarURL || profile.avatarUrl
+      }
+    } catch (e) {
+      console.error('Не удалось загрузить профиль', e)
+    }
+  }
 })
 onBeforeUnmount(() => {
   document.removeEventListener('keydown', handleKeydown)
@@ -269,5 +312,9 @@ onBeforeUnmount(() => {
 })
 
 const nav = (path) => { isProfileOpen.value = false; router.push(path) }
-const logout = () => { isProfileOpen.value = false; alert('Выход...') }
+const logout = () => {
+  isProfileOpen.value = false;
+  authService.logout()
+  router.push('/login')
+}
 </script>
