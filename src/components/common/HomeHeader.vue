@@ -27,6 +27,7 @@ const switchAccount = () => {
 
 const logout = () => {
   isMenuOpen.value = false
-  alert('Выход из профиля...')
+  localStorage.removeItem('token')
+  router.push('/login')
 }
 </script>

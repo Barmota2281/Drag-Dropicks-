@@ -42,8 +42,9 @@
         <!-- Profile dropdown -->
         <div class="relative" ref="profileDropdownRef">
           <button @click="isMenuOpen = !isMenuOpen" class="flex items-center gap-2 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all border border-transparent hover:border-gray-200 dark:hover:border-gray-700">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm">
-              {{ userInitial }}
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-accent-400 to-indigo-500 flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden">
+              <img v-if="userAvatar" :src="userAvatar" alt="Avatar" class="w-full h-full object-cover" />
+              <span v-else>{{ userInitial }}</span>
             </div>
             <svg class="w-3.5 h-3.5 text-gray-400 hidden sm:block transition-transform" :class="{ 'rotate-180': isMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
           </button>
@@ -61,8 +62,8 @@
               <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1 overflow-hidden">
                 <!-- User info -->
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Мой аккаунт</div>
-                  <div class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">user@example.com</div>
+                  <div class="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">Мой аккаунт</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">{{ userEmail }}</div>
                 </div>
                 <div class="py-1">
                   <button @click="navigate('/profile')" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center gap-2.5">
@@ -128,6 +129,7 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
+import { authService } from '../../services/auth.service'
 
 const router = useRouter()
 const route = useRoute()
@@ -136,14 +138,30 @@ const isMobileOpen = ref(false)
 const profileDropdownRef = ref(null)
 
 const isDark = ref(false)
+const userEmail = ref('user@example.com')
+const userAvatar = ref(null)
 
-onMounted(() => {
+onMounted(async () => {
   const saved = localStorage.getItem('theme')
   if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     isDark.value = true
     document.documentElement.classList.add('dark')
   }
   document.addEventListener('click', handleOutsideClick)
+
+  if (authService.isAuthenticated()) {
+    try {
+      const profile = await authService.getProfile()
+      if (profile && profile.email) {
+        userEmail.value = profile.email
+      }
+      if (profile && (profile.avatarURL || profile.avatarUrl)) {
+        userAvatar.value = profile.avatarURL || profile.avatarUrl
+      }
+    } catch (e) {
+      console.error('Не удалось загрузить профиль в шапке', e)
+    }
+  }
 })
 
 onBeforeUnmount(() => {
@@ -162,7 +180,9 @@ const toggleTheme = () => {
   localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
 }
 
-const userInitial = computed(() => 'U')
+const userInitial = computed(() => {
+  return userEmail.value ? userEmail.value.charAt(0).toUpperCase() : 'U'
+})
 
 const navLinks = [
   {
@@ -200,6 +220,7 @@ const navigate = (path) => {
 
 const logout = () => {
   isMenuOpen.value = false
-  alert('Выход из профиля...')
+  authService.logout()
+  router.push('/login')
 }
 </script>

@@ -10,6 +10,8 @@ const user = ref(null)
 const email = ref('')
 const password = ref('')
 const displayName = ref('')
+const avatarUrl = ref('')
+const phoneNumber = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
 
@@ -27,6 +29,8 @@ const loadUserProfile = async () => {
     if (user.value) {
       email.value = user.value.email;
       displayName.value = user.value.displayName || '';
+      avatarUrl.value = user.value.avatarUrl || '';
+      phoneNumber.value = user.value.phoneNumber || '';
     }
   } catch (e) {
     console.error('Ошибка загрузки профиля', e);
@@ -81,8 +85,12 @@ const handleUpdateProfile = async () => {
   loading.value = true;
   errorMsg.value = '';
   try {
-    const response = await api.put('/auth/profile', { displayName: displayName.value });
-    alert("Профиль успешно обновлен в базе!");
+    const response = await api.put('/auth/me', {
+      displayName: displayName.value,
+      avatarUrl: avatarUrl.value,
+      phoneNumber: phoneNumber.value
+    });
+    alert("Профиль успешно обновлен!");
     user.value = response.data;
   } catch (err) {
     errorMsg.value = "Ошибка: " + (err.response?.data?.message || err.message);
@@ -157,8 +165,8 @@ const goHome = () => {
 
         <div v-else class="text-center">
           <div class="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center text-gray-500 dark:text-gray-400 overflow-hidden shadow-inner">
-            <svg v-if="!user.photoURL" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-            <img v-else :src="user.photoURL" alt="Avatar" class="w-full h-full object-cover">
+            <svg v-if="!user.avatarUrl" class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            <img v-else :src="user.avatarUrl" alt="Avatar" class="w-full h-full object-cover">
           </div>
 
           <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Профиль</h2>
@@ -172,6 +180,16 @@ const goHome = () => {
             <div class="text-left">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Отображаемое имя</label>
               <input v-model="displayName" type="text" class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors shadow-sm">
+            </div>
+
+            <div class="text-left">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL Аватарки</label>
+              <input v-model="avatarUrl" type="url" placeholder="https://..." class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors shadow-sm">
+            </div>
+
+            <div class="text-left">
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Номер телефона</label>
+              <input v-model="phoneNumber" type="tel" placeholder="+7 (999) 000-00-00" class="w-full bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors shadow-sm">
             </div>
 
             <button :disabled="loading" type="submit" class="w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200 font-medium rounded-lg transition-colors">
