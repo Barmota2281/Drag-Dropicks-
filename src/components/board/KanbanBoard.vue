@@ -163,6 +163,7 @@
             class="flex-1 min-w-0"
             :board-title="currentView === 'board' ? activeBoard?.title : 'Задача'"
             :boards="boards"
+            :standalone-tasks="standaloneTasks"
             @add-task="addGeneralTask"
             @jump-to-task="handleJumpToTask"
         />
@@ -214,6 +215,7 @@
               class="flex-1 flex flex-col gap-3 overflow-y-auto min-h-[150px] p-1 pb-6"
               ghost-class="sortable-ghost"
               drag-class="sortable-drag"
+              @change="(evt) => onTaskChange(evt, column.id)"
           >
             <template #item="{element}">
               <div
@@ -772,12 +774,24 @@ const openTaskMeta = (task, columnId) => {
 
 const closeTaskMeta = () => { editingTaskMeta.value = null }
 
-const saveTaskMeta = () => {
-  const { task } = editingTaskMeta.value
+const saveTaskMeta = async () => {
+  const { task, columnId } = editingTaskMeta.value
   task.priority = taskMetaForm.value.priority
   task.deadline = taskMetaForm.value.deadline
   task.reminder = taskMetaForm.value.reminder
   closeTaskMeta()
+
+  if (activeBoard.value) {
+    try {
+      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, {
+        columnId,
+        priority: task.priority,
+        deadline: task.deadline,
+        reminder: task.reminder
+      })
+    } catch(e) { console.warn('Ошибка сохранения параметров задачи:', e) }
+  }
+
   // Rebuild notifications to reflect deadline changes immediately
   buildNotifications()
   addToast('Параметры задачи сохранены', 'success')
@@ -896,7 +910,7 @@ const loadBoards = async () => {
         ...col,
         tasks: col.tasks ? col.tasks.map(task => ({
           ...task,
-          editor: createEditor(task.content || '<p></p>')
+          editor: createEditor(task.content || '<p></p>', task.id)
         })) : []
       })) : []
     }));
@@ -948,7 +962,7 @@ onMounted(() => {
 
 const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
 
-const createEditor = (content) => {
+const createEditor = (content, taskId = null) => {
   const editor = markRaw(new Editor({
     extensions: [
       StarterKit, TextStyle, Color, Highlight,
@@ -960,7 +974,16 @@ const createEditor = (content) => {
       attributes: { class: 'prose prose-sm dark:prose-invert xl:prose-base m-1 focus:outline-none max-h-48 overflow-y-auto pl-6 relative' },
     },
     onFocus: () => { activeEditor.value = editor },
-    onBlur: () => { if (activeEditor.value === editor) activeEditor.value = null },
+    onBlur: async ({ editor }) => {
+      if (activeEditor.value === editor) activeEditor.value = null
+      if (taskId && activeBoard.value) {
+        try {
+          await api.put(`/boards/${activeBoard.value.id}/tasks/${taskId}`, {
+            content: editor.getHTML()
+          })
+        } catch(e) { console.warn('Автосохранение текста не удалось:', e) }
+      }
+    },
   }))
   return editor
 }
@@ -978,13 +1001,13 @@ const boardTemplates = [
 const addBoard = async () => {
   if (newBoardTitle.value.trim()) {
     const template = boardTemplates.find(t => t.id === newBoardTemplate.value) || boardTemplates[1];
-    const columns = template.columns.map(title => ({ title, tasks: [] }));
+    const columns = template.columns.map((title, index) => ({ title, order: index, tasks: [] }));
     try {
       const response = await api.post('/boards', { title: newBoardTitle.value.trim(), columns });
       const newBoard = response.data;
       if (newBoard.columns) {
         newBoard.columns.forEach(col => {
-          if (col.tasks) col.tasks.forEach(task => { task.editor = createEditor(task.content || '') })
+          if (col.tasks) col.tasks.forEach(task => { task.editor = createEditor(task.content || '', task.id) })
           else col.tasks = []
         })
       }
@@ -1013,6 +1036,22 @@ const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activ
 const isTasksOpen = ref(true)
 
 const activeEditor = ref(null)
+
+const onTaskChange = async (evt, columnId) => {
+  if (evt.added && activeBoard.value) {
+    const task = evt.added.element
+    if (!task) return
+    try {
+      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, { columnId, order: evt.added.newIndex })
+    } catch(e) { console.warn('Ошибка при перемещении задачи', e) }
+  } else if (evt.moved && activeBoard.value) {
+    const task = evt.moved.element
+    if (!task) return
+    try {
+      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, { columnId, order: evt.moved.newIndex })
+    } catch(e) { console.warn('Ошибка при изменении порядка задачи', e) }
+  }
+}
 
 const copySelection = (editor) => {
   if (!editor) return
@@ -1046,7 +1085,7 @@ const saveColumnEdit = async () => {
   if (editingColumn.value && activeBoard.value) {
     const col = activeBoard.value.columns.find(c => c.id === editingColumn.value.id)
     if (col) {
-      try { await api.put(`/columns/${col.id}`, { title: editColData.value.title, color: editColData.value.color }) } catch {}
+      try { await api.put(`/boards/${activeBoard.value.id}/columns/${col.id}`, { title: editColData.value.title, color: editColData.value.color }) } catch {}
       col.title = editColData.value.title
       col.color = editColData.value.color
     }
@@ -1057,7 +1096,7 @@ const saveColumnEdit = async () => {
 const deleteColumn = async (columnId) => {
   if (confirm('Вы уверены, что хотите удалить эту колонку со всеми задачами?')) {
     if (activeBoard.value) {
-      try { await api.delete(`/columns/${columnId}`) } catch {}
+      try { await api.delete(`/boards/${activeBoard.value.id}/columns/${columnId}`) } catch {}
       activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
     }
     closeEditColumn()
@@ -1068,10 +1107,13 @@ const addTask = async (columnId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
     try {
-      const response = await api.post(`/columns/${columnId}/tasks`, { content: '<p>Новая задача...</p>' });
-      column.tasks.push({ ...response.data, editor: createEditor(response.data.content), priority: null, deadline: '', reminder: false })
+      const response = await api.post(`/boards/${activeBoard.value.id}/tasks`, { columnId, content: '<p>Новая задача...</p>' });
+      const newTask = { ...response.data, priority: null, deadline: '', reminder: false };
+      newTask.editor = createEditor(response.data.content, newTask.id);
+      column.tasks.push(newTask);
     } catch (e) {
-      column.tasks.push({ id: generateId(), editor: createEditor('<p>Новая задача...</p>'), createdAt: Date.now(), priority: null, deadline: '', reminder: false })
+      const tempId = generateId();
+      column.tasks.push({ id: tempId, editor: createEditor('<p>Новая задача...</p>', tempId), createdAt: Date.now(), priority: null, deadline: '', reminder: false })
     }
   }
 }
@@ -1084,11 +1126,18 @@ const addGeneralTask = async () => {
 }
 
 const deleteStandaloneTask = (id) => {
-  if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+  if (confirm('Вы уверены?')) {
     const index = standaloneTasks.value.findIndex(t => t.id === id)
     if (index !== -1) {
-      standaloneTasks.value[index].editor.destroy()
+      const task = standaloneTasks.value[index]
+      const editorObj = task.editor
+      task.editor = null
       standaloneTasks.value.splice(index, 1)
+      if (editorObj && !editorObj.isDestroyed) {
+        setTimeout(() => {
+          try { editorObj.destroy() } catch(e){}
+        }, 100)
+      }
       if (standaloneTasks.value.length > 0) activeTaskId.value = standaloneTasks.value[0].id
       else currentView.value = 'board'
     }
@@ -1098,28 +1147,45 @@ const deleteStandaloneTask = (id) => {
 const deleteTask = async (columnId, taskId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
-    try { await api.delete(`/tasks/${taskId}`) } catch {}
+    try { await api.delete(`/boards/${activeBoard.value.id}/tasks/${taskId}`) } catch (e) {
+      console.warn('Ошибка при удалении:', e)
+    }
     const index = column.tasks.findIndex(t => t.id === taskId)
-    if (index !== -1) { column.tasks[index].editor.destroy(); column.tasks.splice(index, 1) }
+    if (index !== -1) {
+      const task = column.tasks[index]
+      const editorObj = task.editor
+      task.editor = null
+      column.tasks.splice(index, 1)
+      if (editorObj && !editorObj.isDestroyed) {
+        setTimeout(() => {
+          try { editorObj.destroy() } catch(e){}
+        }, 100)
+      }
+    }
   }
 }
 
-const handleJumpToTask = ({ boardId, columnId, taskId }) => {
-  activeBoardId.value = boardId
-  currentView.value = 'board'
-  setTimeout(() => {
-    const el = document.querySelector(`[data-task-id="${taskId}"]`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      el.classList.add('ring-2', 'ring-accent-500', 'ring-offset-2')
-      setTimeout(() => el.classList.remove('ring-2', 'ring-accent-500', 'ring-offset-2'), 2000)
-    }
-  }, 150)
+const handleJumpToTask = ({ boardId, columnId, taskId, isStandalone }) => {
+  if (isStandalone) {
+    activeTaskId.value = taskId
+    currentView.value = 'task'
+  } else {
+    activeBoardId.value = boardId
+    currentView.value = 'board'
+    setTimeout(() => {
+      const el = document.querySelector(`[data-task-id="${taskId}"]`)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-accent-500', 'ring-offset-2')
+        setTimeout(() => el.classList.remove('ring-2', 'ring-accent-500', 'ring-offset-2'), 2000)
+      }
+    }, 150)
+  }
 }
 
 onBeforeUnmount(() => {
-  boards.value.forEach(board => { board.columns.forEach(column => { column.tasks.forEach(task => task.editor.destroy()) }) })
-  standaloneTasks.value.forEach(task => task.editor.destroy())
+  boards.value.forEach(board => { board.columns.forEach(column => { column.tasks.forEach(task => { if (task.editor && !task.editor.isDestroyed) { setTimeout(() => { try { task.editor.destroy() } catch(e){} }, 100) } }) }) })
+  standaloneTasks.value.forEach(task => { if (task.editor && !task.editor.isDestroyed) { setTimeout(() => { try { task.editor.destroy() } catch(e){} }, 100) } })
 })
 </script>
 
@@ -1140,3 +1206,4 @@ onBeforeUnmount(() => {
 .prose :deep(strong) { font-weight: 700; }
 .prose :deep(h1), .prose :deep(h2), .prose :deep(h3) { margin: 0; font-weight: 600; }
 </style>
+

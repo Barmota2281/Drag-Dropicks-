@@ -98,6 +98,64 @@
           </div>
         </div>
       </div>
+
+      <!-- Управление аккаунтом и безопасность -->
+      <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow sm:p-6 p-4 border border-gray-200 dark:border-gray-700">
+        <h2 class="text-xl font-semibold mb-5 flex items-center gap-2">
+          <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+          Управление аккаунтом и безопасность
+        </h2>
+
+        <div class="space-y-6">
+          <!-- Смена пароля -->
+          <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+            <h3 class="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">Изменение пароля</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Рекомендуется использовать надежный пароль, который вы не используете на других сайтах.</p>
+            <button @click="showPasswordModal = true" class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Сменить пароль
+            </button>
+          </div>
+
+          <!-- Привязка аккаунтов -->
+          <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+            <h3 class="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">Связанные аккаунты</h3>
+            <div class="flex items-center justify-between py-2">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-500">
+                  <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="text-sm font-medium">Google</div>
+                  <div class="text-xs text-gray-500">Не подключен</div>
+                </div>
+              </div>
+              <button class="text-accent-600 dark:text-accent-400 text-sm font-medium hover:underline">Подключить</button>
+            </div>
+          </div>
+
+          <!-- Сессии -->
+          <div class="border-b border-gray-200 dark:border-gray-700 pb-6">
+            <h3 class="text-md font-medium text-gray-800 dark:text-gray-200 mb-2">Активные сессии</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Выйти со всех остальных устройств, кроме текущего.</p>
+            <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              Завершить другие сессии
+            </button>
+          </div>
+
+          <!-- Удаление аккаунта -->
+          <div>
+            <h3 class="text-md font-medium text-red-600 mb-2">Удаление аккаунта</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Навсегда удалить аккаунт и все связанные с ним данные досок, задач и комментариев. Это действие необратимо.</p>
+            <button @click="confirmDeleteAccount" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition">
+              Удалить аккаунт
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -109,6 +167,14 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const theme = ref('system')
 const colorScheme = ref('blue')
+
+const showPasswordModal = ref(false)
+
+const confirmDeleteAccount = () => {
+  if (confirm('Вы уверены, что хотите навсегда удалить свой аккаунт? Это действие отменить нельзя.')) {
+     alert('Функция удаления аккаунта требует подтверждения через API.')
+  }
+}
 
 onMounted(() => {
   const savedTheme = localStorage.getItem('theme')

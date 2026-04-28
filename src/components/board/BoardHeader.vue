@@ -19,7 +19,7 @@
             v-model="searchQuery"
             type="text"
             placeholder="Поиск задач по всем доскам..."
-            class="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all focus:bg-gray-50 dark:focus:bg-gray-800 shadow-sm"
+            class="w-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 rounded-lg pl-9 pr-8 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-all focus:bg-transparent dark:focus:bg-gray-700 shadow-sm"
             @focus="isSearchOpen = true"
             @keydown.escape="closeSearch"
             @keydown.down.prevent="moveSelection(1)"
