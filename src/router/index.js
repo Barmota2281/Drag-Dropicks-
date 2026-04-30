@@ -49,12 +49,14 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = authService.isAuthenticated();
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next('/login');
-  } else {
-    next();
-  }
+    const isAuthenticated = authService.isAuthenticated();
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        next({ path: '/login', replace: true });
+    } else if ((to.name === 'Login' || to.name === 'Register') && isAuthenticated) {
+        next({ path: '/board', replace: true });
+    } else {
+        next();
+    }
 })
 
 export default router

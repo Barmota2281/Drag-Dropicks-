@@ -172,7 +172,7 @@
       <!-- Board view -->
       <!-- Single global bubble-menu outside draggable, tracks activeEditor -->
       <bubble-menu
-          v-if="activeEditor"
+          v-if="activeEditor && !activeEditor.isDestroyed"
           :editor="activeEditor"
           :tippy-options="{ duration: 100, placement: 'top' }"
           class="flex bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden items-center z-[200]"
@@ -629,6 +629,7 @@ import { Highlight } from '@tiptap/extension-highlight'
 import { CharacterCount } from '@tiptap/extension-character-count'
 import { Emoji, gitHubEmojis } from '@tiptap/extension-emoji'
 import api from '../../api'
+import * as boardService from '../../services/board.service.js'
 import emojiSuggestion from './emojiSuggestion.js'
 
 const router = useRouter()
@@ -902,22 +903,22 @@ const activeBoardId = ref(null)
 
 const loadBoards = async () => {
   try {
-    const response = await api.get('/boards');
-    const fetchedBoards = response.data;
+    const fetchedBoards = await boardService.fetchAllBoards();
     boards.value = fetchedBoards.map(board => ({
       ...board,
-      columns: board.columns ? board.columns.map(col => ({
+      columns: (board.columns || []).map(col => ({
         ...col,
-        tasks: col.tasks ? col.tasks.map(task => ({
+        tasks: (col.tasks || []).map(task => ({
           ...task,
           editor: createEditor(task.content || '<p></p>', task.id)
-        })) : []
-      })) : []
+        }))
+      }))
     }));
     if (boards.value.length > 0 && !activeBoardId.value) {
       activeBoardId.value = boards.value[0].id;
     }
   } catch (error) {
+    console.warn('Ошибка загрузки досок:', error);
     boards.value = [
       {
         id: 'b1',
@@ -976,9 +977,10 @@ const createEditor = (content, taskId = null) => {
     onFocus: () => { activeEditor.value = editor },
     onBlur: async ({ editor }) => {
       if (activeEditor.value === editor) activeEditor.value = null
-      if (taskId && activeBoard.value) {
+      // Проверяем что редактор не уничтожен и компонент не размонтируется
+      if (taskId && activeBoard.value && editor && !editor.isDestroyed && !isUnmounting.value) {
         try {
-          await api.put(`/boards/${activeBoard.value.id}/tasks/${taskId}`, {
+          await boardService.updateTask(activeBoard.value.id, taskId, {
             content: editor.getHTML()
           })
         } catch(e) { console.warn('Автосохранение текста не удалось:', e) }
@@ -1003,26 +1005,24 @@ const addBoard = async () => {
     const template = boardTemplates.find(t => t.id === newBoardTemplate.value) || boardTemplates[1];
     const columns = template.columns.map((title, index) => ({ title, order: index, tasks: [] }));
     try {
-      const response = await api.post('/boards', { title: newBoardTitle.value.trim(), columns });
-      const newBoard = response.data;
-      if (newBoard.columns) {
-        newBoard.columns.forEach(col => {
-          if (col.tasks) col.tasks.forEach(task => { task.editor = createEditor(task.content || '', task.id) })
-          else col.tasks = []
-        })
-      }
+      const template = boardTemplates.find(t => t.id === newBoardTemplate.value)
+      const templateName = template?.name || 'Пустая доска'
+      const newBoard = await boardService.createBoard(newBoardTitle.value.trim(), templateName)
+      // Добавляем редакторы для задач (их обычно нет на новой доске, но на всякий случай)
+      newBoard.columns.forEach(col => {
+        col.tasks = (col.tasks || []).map(task => ({
+          ...task,
+          editor: createEditor(task.content || '<p></p>', task.id)
+        }))
+      })
       boards.value.push(newBoard)
       activeBoardId.value = newBoard.id
       currentView.value = 'board'
       newBoardTitle.value = ''
       addToast(`Доска "${newBoard.title}" создана`, 'success')
     } catch (e) {
-      const id = generateId()
-      boards.value.push({ id, title: newBoardTitle.value.trim(), columns: columns.map(c => ({ ...c, id: generateId(), tasks: [] })) })
-      activeBoardId.value = id
-      currentView.value = 'board'
-      newBoardTitle.value = ''
-      addToast('Доска создана локально', 'info')
+      console.warn('Ошибка создания доски:', e)
+      addToast('Ошибка создания доски. Проверьте подключение.', 'error')
     }
   }
 }
@@ -1036,19 +1036,20 @@ const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activ
 const isTasksOpen = ref(true)
 
 const activeEditor = ref(null)
+const isUnmounting = ref(false)
 
 const onTaskChange = async (evt, columnId) => {
   if (evt.added && activeBoard.value) {
     const task = evt.added.element
     if (!task) return
     try {
-      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, { columnId, order: evt.added.newIndex })
+      await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.added.newIndex)
     } catch(e) { console.warn('Ошибка при перемещении задачи', e) }
   } else if (evt.moved && activeBoard.value) {
     const task = evt.moved.element
     if (!task) return
     try {
-      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, { columnId, order: evt.moved.newIndex })
+      await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.moved.newIndex)
     } catch(e) { console.warn('Ошибка при изменении порядка задачи', e) }
   }
 }
@@ -1067,10 +1068,12 @@ const addColumn = async () => {
     const title = prompt('Название колонки:')
     if (title?.trim()) {
       try {
-        const response = await api.post(`/boards/${activeBoard.value.id}/columns`, { title: title.trim(), color: '#9ca3af' });
-        activeBoard.value.columns.push({ ...response.data, tasks: [] });
+        const order = activeBoard.value.columns.length
+        const newCol = await boardService.createColumn(activeBoard.value.id, title.trim(), '#9ca3af', order)
+        activeBoard.value.columns.push(newCol)
       } catch (e) {
-        activeBoard.value.columns.push({ id: generateId(), title: title.trim(), color: '#9ca3af', tasks: [] })
+        console.warn('Ошибка создания колонки:', e)
+        addToast('Ошибка создания колонки', 'error')
       }
     }
   }
@@ -1085,7 +1088,7 @@ const saveColumnEdit = async () => {
   if (editingColumn.value && activeBoard.value) {
     const col = activeBoard.value.columns.find(c => c.id === editingColumn.value.id)
     if (col) {
-      try { await api.put(`/boards/${activeBoard.value.id}/columns/${col.id}`, { title: editColData.value.title, color: editColData.value.color }) } catch {}
+      try { await boardService.updateColumn(activeBoard.value.id, col.id, { title: editColData.value.title, color: editColData.value.color }) } catch (e) { console.warn('Ошибка обновления колонки:', e) }
       col.title = editColData.value.title
       col.color = editColData.value.color
     }
@@ -1096,7 +1099,7 @@ const saveColumnEdit = async () => {
 const deleteColumn = async (columnId) => {
   if (confirm('Вы уверены, что хотите удалить эту колонку со всеми задачами?')) {
     if (activeBoard.value) {
-      try { await api.delete(`/boards/${activeBoard.value.id}/columns/${columnId}`) } catch {}
+      try { await boardService.deleteColumn(activeBoard.value.id, columnId) } catch (e) { console.warn('Ошибка удаления колонки:', e) }
       activeBoard.value.columns = activeBoard.value.columns.filter(c => c.id !== columnId)
     }
     closeEditColumn()
@@ -1107,13 +1110,13 @@ const addTask = async (columnId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
     try {
-      const response = await api.post(`/boards/${activeBoard.value.id}/tasks`, { columnId, content: '<p>Новая задача...</p>' });
-      const newTask = { ...response.data, priority: null, deadline: '', reminder: false };
-      newTask.editor = createEditor(response.data.content, newTask.id);
-      column.tasks.push(newTask);
+      const order = column.tasks.length
+      const newTask = await boardService.createTask(activeBoard.value.id, columnId, order)
+      newTask.editor = createEditor(newTask.content, newTask.id)
+      column.tasks.push(newTask)
     } catch (e) {
-      const tempId = generateId();
-      column.tasks.push({ id: tempId, editor: createEditor('<p>Новая задача...</p>', tempId), createdAt: Date.now(), priority: null, deadline: '', reminder: false })
+      console.warn('Ошибка создания задачи:', e)
+      addToast('Ошибка создания задачи', 'error')
     }
   }
 }
@@ -1147,7 +1150,7 @@ const deleteStandaloneTask = (id) => {
 const deleteTask = async (columnId, taskId) => {
   const column = activeBoard.value.columns.find(c => c.id === columnId)
   if (column) {
-    try { await api.delete(`/boards/${activeBoard.value.id}/tasks/${taskId}`) } catch (e) {
+    try { await boardService.deleteTask(activeBoard.value.id, taskId) } catch (e) {
       console.warn('Ошибка при удалении:', e)
     }
     const index = column.tasks.findIndex(t => t.id === taskId)
@@ -1184,8 +1187,26 @@ const handleJumpToTask = ({ boardId, columnId, taskId, isStandalone }) => {
 }
 
 onBeforeUnmount(() => {
-  boards.value.forEach(board => { board.columns.forEach(column => { column.tasks.forEach(task => { if (task.editor && !task.editor.isDestroyed) { setTimeout(() => { try { task.editor.destroy() } catch(e){} }, 100) } }) }) })
-  standaloneTasks.value.forEach(task => { if (task.editor && !task.editor.isDestroyed) { setTimeout(() => { try { task.editor.destroy() } catch(e){} }, 100) } })
+  // Сначала сбрасываем activeEditor чтобы BubbleMenu размонтировался чисто
+  isUnmounting.value = true
+  activeEditor.value = null
+  // Синхронно уничтожаем все редакторы — без setTimeout чтобы не было race condition
+  boards.value.forEach(board => {
+    board.columns.forEach(column => {
+      column.tasks.forEach(task => {
+        if (task.editor && !task.editor.isDestroyed) {
+          try { task.editor.destroy() } catch(e) {}
+          task.editor = null
+        }
+      })
+    })
+  })
+  standaloneTasks.value.forEach(task => {
+    if (task.editor && !task.editor.isDestroyed) {
+      try { task.editor.destroy() } catch(e) {}
+      task.editor = null
+    }
+  })
 })
 </script>
 
@@ -1206,4 +1227,3 @@ onBeforeUnmount(() => {
 .prose :deep(strong) { font-weight: 700; }
 .prose :deep(h1), .prose :deep(h2), .prose :deep(h3) { margin: 0; font-weight: 600; }
 </style>
-
