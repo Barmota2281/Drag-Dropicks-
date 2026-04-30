@@ -4,7 +4,7 @@
  * Бэкенд: Spring Boot + Firebase Firestore
  * Все данные пользователя хранятся в Firestore, привязаны к UID через JWT.
  */
-import api from './api';
+import api from '../api.js';
 
 // ── Доски ────────────────────────────────────────────────────────────────────
 

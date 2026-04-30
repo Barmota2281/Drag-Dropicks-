@@ -1,18 +1,19 @@
 import api from '../api';
+import { saveToken } from '../tokenManager';
 
 export const authService = {
   async register(email, password, displayName = 'Новый Пользователь') {
     const response = await api.post('/auth/register', { email, password, displayName });
-    if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    if (response.data?.token) {
+      saveToken(response.data.token, response.data.refreshToken, response.data.expiresIn);
     }
     return response.data;
   },
 
   async login(email, password) {
     const response = await api.post('/auth/login', { email, password });
-    if (response.data && response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    if (response.data?.token) {
+      saveToken(response.data.token, response.data.refreshToken, response.data.expiresIn);
     }
     return response.data;
   },
@@ -29,6 +30,9 @@ export const authService = {
 
   logout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('tokenExpiresAt');
+    window.location.href = '/login';
   },
 
   isAuthenticated() {
