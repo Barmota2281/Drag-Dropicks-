@@ -166,6 +166,7 @@
             :standalone-tasks="standaloneTasks"
             @add-task="addGeneralTask"
             @jump-to-task="handleJumpToTask"
+            @edit-board="openBoardSettings"
         />
       </div>
 
@@ -250,8 +251,15 @@
                   <!-- Badges: always rendered, hidden via v-show (no VNode branching) -->
                   <div
                       class="flex flex-wrap items-center gap-1.5 mt-2"
-                      v-show="element.priority || element.deadline"
+                      v-show="element.priority || element.deadline || (element.recurrence && element.recurrence !== 'none')"
                   >
+                    <span
+                        v-show="element.recurrence && element.recurrence !== 'none'"
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
+                        title="Повторяющаяся задача"
+                    >
+                      <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </span>
                     <span
                         v-show="element.priority"
                         class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium"
@@ -500,35 +508,62 @@
             <div class="space-y-2">
               <button @click="exportBoard('json'); isExportModalOpen = false"
                       class="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-all group text-left">
-                <div class="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></div>
-                <div class="flex-1">
-                  <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400">JSON</div>
-                  <div class="text-xs text-gray-400 mt-0.5">Полный экспорт с метаданными, для импорта</div>
-                </div>
+                <span class="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg></span>
+                <span class="flex-1 block">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400 block">JSON</span>
+                  <span class="text-xs text-gray-400 mt-0.5 block">Полный экспорт с метаданными, для импорта</span>
+                </span>
                 <svg class="w-4 h-4 text-gray-300 group-hover:text-accent-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               </button>
               <button @click="exportBoard('markdown'); isExportModalOpen = false"
                       class="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-all group text-left">
-                <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
-                <div class="flex-1">
-                  <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400">Markdown</div>
-                  <div class="text-xs text-gray-400 mt-0.5">Читаемый текст, для Notion / GitHub</div>
-                </div>
+                <span class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>
+                <span class="flex-1 block">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400 block">Markdown</span>
+                  <span class="text-xs text-gray-400 mt-0.5 block">Читаемый текст, для Notion / GitHub</span>
+                </span>
                 <svg class="w-4 h-4 text-gray-300 group-hover:text-accent-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               </button>
               <button @click="exportBoard('csv'); isExportModalOpen = false"
                       class="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-accent-400 hover:bg-accent-50 dark:hover:bg-accent-900/20 transition-all group text-left">
-                <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/></svg></div>
-                <div class="flex-1">
-                  <div class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400">CSV</div>
-                  <div class="text-xs text-gray-400 mt-0.5">Таблица для Excel / Google Sheets</div>
-                </div>
+                <span class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0"><svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M10 3v18M14 3v18M3 6a3 3 0 013-3h12a3 3 0 013 3v12a3 3 0 01-3 3H6a3 3 0 01-3-3V6z"/></svg></span>
+                <span class="flex-1 block">
+                  <span class="text-sm font-semibold text-gray-800 dark:text-gray-200 group-hover:text-accent-700 dark:group-hover:text-accent-400 block">CSV</span>
+                  <span class="text-xs text-gray-400 mt-0.5 block">Таблица для Excel / Google Sheets</span>
+                </span>
                 <svg class="w-4 h-4 text-gray-300 group-hover:text-accent-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
               </button>
             </div>
           </div>
           <div class="px-6 py-4 mt-2">
             <button @click="isExportModalOpen = false" class="w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Отмена</button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+
+    <!-- ── Modal: Board settings ─────────────────────── -->
+    <Transition enter-active-class="transition duration-200 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-150 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+      <div v-if="isBoardSettingsModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm" @click.self="isBoardSettingsModalOpen = false">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-gray-100">Настройки доски</h2>
+            <button @click="isBoardSettingsModalOpen = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="px-6 py-5 space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Название доски</label>
+              <input v-model="boardSettingsForm.title" type="text" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors" />
+            </div>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
+            <button @click="confirmDeleteBoard" class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20">Удалить доску</button>
+            <div class="flex gap-2">
+              <button @click="isBoardSettingsModalOpen = false" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Отмена</button>
+              <button @click="saveBoardSettings" :disabled="!boardSettingsForm.title.trim()" class="px-4 py-2 bg-accent-600 hover:bg-accent-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">Сохранить</button>
+            </div>
           </div>
         </div>
       </div>
@@ -547,6 +582,14 @@
           </div>
 
           <div class="px-6 py-5 space-y-5">
+            <!-- Column picker -->
+            <div v-if="activeBoard">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Колонка</label>
+              <select v-model="taskMetaForm.columnId" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors">
+                <option v-for="col in activeBoard.columns" :key="col.id" :value="col.id">{{ col.title }}</option>
+              </select>
+            </div>
+
             <!-- Priority picker -->
             <div>
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Приоритет</label>
@@ -586,6 +629,17 @@
                   {{ shortcut.label }}
                 </button>
               </div>
+            </div>
+
+            <!-- Recurrence -->
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Повторяющаяся</label>
+              <select v-model="taskMetaForm.recurrence" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors">
+                <option value="none">Нет</option>
+                <option value="daily">Ежедневно</option>
+                <option value="weekly">Еженедельно</option>
+                <option value="monthly">Ежемесячно</option>
+              </select>
             </div>
 
             <!-- Reminder toggle -->
@@ -762,34 +816,103 @@ const formatDeadline = (deadline) => {
 
 // ── Task meta modal ─────────────────────────────────────────────────────────
 const editingTaskMeta = ref(null) // { task, columnId }
-const taskMetaForm = ref({ priority: null, deadline: '', reminder: false })
+const taskMetaForm = ref({ priority: null, deadline: '', reminder: false, columnId: '', recurrence: 'none' })
 
 const openTaskMeta = (task, columnId) => {
   editingTaskMeta.value = { task, columnId }
   taskMetaForm.value = {
     priority: task.priority || null,
     deadline: task.deadline || '',
-    reminder: task.reminder || false
+    reminder: task.reminder || false,
+    columnId: columnId,
+    recurrence: task.recurrence || 'none'
   }
 }
 
 const closeTaskMeta = () => { editingTaskMeta.value = null }
 
+const handleTaskRecurrence = async (completedTask) => {
+  if (!activeBoard.value || !activeBoard.value.columns.length) return
+
+  const firstCol = activeBoard.value.columns[0]
+
+  let newDeadline = ''
+  if (completedTask.deadline) {
+    const dl = new Date(completedTask.deadline)
+    if (completedTask.recurrence === 'daily') dl.setDate(dl.getDate() + 1)
+    else if (completedTask.recurrence === 'weekly') dl.setDate(dl.getDate() + 7)
+    else if (completedTask.recurrence === 'monthly') dl.setMonth(dl.getMonth() + 1)
+    newDeadline = dl.toISOString().split('T')[0]
+  }
+
+  try {
+    const newTask = await boardService.createTask(activeBoard.value.id, firstCol.id, firstCol.tasks.length)
+    newTask.editor = createEditor(completedTask.editor?.getHTML() || '<p></p>', newTask.id)
+    newTask.priority = completedTask.priority
+    newTask.deadline = newDeadline
+    newTask.reminder = completedTask.reminder
+    newTask.recurrence = completedTask.recurrence
+
+    await boardService.updateTask(activeBoard.value.id, newTask.id, {
+      content: newTask.editor.getHTML(),
+      priority: newTask.priority,
+      deadline: newTask.deadline,
+      reminder: newTask.reminder,
+      recurrence: newTask.recurrence
+    })
+
+    firstCol.tasks.push(newTask)
+
+    // Clear recurrence on original task
+    completedTask.recurrence = 'none'
+    await boardService.updateTask(activeBoard.value.id, completedTask.id, { recurrence: 'none' })
+
+    addToast('Повторяющаяся задача воссоздана', 'info')
+  } catch(e) {
+    console.error('Ошибка создания повторяющейся задачи:', e)
+  }
+}
+
 const saveTaskMeta = async () => {
-  const { task, columnId } = editingTaskMeta.value
+  const { task, columnId: oldColumnId } = editingTaskMeta.value
   task.priority = taskMetaForm.value.priority
   task.deadline = taskMetaForm.value.deadline
   task.reminder = taskMetaForm.value.reminder
+  task.recurrence = taskMetaForm.value.recurrence
+  const targetColId = taskMetaForm.value.columnId
+
   closeTaskMeta()
 
   if (activeBoard.value) {
     try {
-      await api.put(`/boards/${activeBoard.value.id}/tasks/${task.id}`, {
-        columnId,
+      let isTaskMoved = false
+      let newColRef = null
+
+      if (oldColumnId !== targetColId) {
+        const oldCol = activeBoard.value.columns.find(c => c.id === oldColumnId)
+        const newCol = activeBoard.value.columns.find(c => c.id === targetColId)
+        if (oldCol && newCol) {
+          const idx = oldCol.tasks.findIndex(t => t.id === task.id)
+          if (idx !== -1) {
+            oldCol.tasks.splice(idx, 1)
+            newCol.tasks.push(task)
+            await boardService.moveTask(activeBoard.value.id, task.id, targetColId, newCol.tasks.length - 1)
+            isTaskMoved = true
+            newColRef = newCol
+          }
+        }
+      }
+
+      await boardService.updateTask(activeBoard.value.id, task.id, {
         priority: task.priority,
         deadline: task.deadline,
-        reminder: task.reminder
+        reminder: task.reminder,
+        recurrence: task.recurrence
       })
+
+      if (isTaskMoved && newColRef && newColRef.title.toLowerCase() === 'готово' && task.recurrence && task.recurrence !== 'none') {
+        await handleTaskRecurrence(task)
+      }
     } catch(e) { console.warn('Ошибка сохранения параметров задачи:', e) }
   }
 
@@ -963,6 +1086,49 @@ onMounted(() => {
 
 const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
 
+const isBoardSettingsModalOpen = ref(false)
+const boardSettingsForm = ref({ title: '' })
+
+const openBoardSettings = () => {
+  if (!activeBoard.value) return
+  boardSettingsForm.value = { title: activeBoard.value.title }
+  isBoardSettingsModalOpen.value = true
+}
+
+const saveBoardSettings = async () => {
+  if (!activeBoard.value || !boardSettingsForm.value.title.trim()) return
+  try {
+    const newTitle = boardSettingsForm.value.title.trim()
+    await boardService.updateBoard(activeBoard.value.id, { title: newTitle })
+    activeBoard.value.title = newTitle
+    const idx = boards.value.findIndex(b => b.id === activeBoard.value.id)
+    if (idx !== -1) boards.value[idx].title = newTitle
+    isBoardSettingsModalOpen.value = false
+  } catch (error) {
+    console.error('Ошибка сохранения настроек доски:', error)
+  }
+}
+
+const confirmDeleteBoard = async () => {
+  if (!activeBoard.value) return
+  if (confirm(`Вы уверены, что хотите удалить доску "${activeBoard.value.title}"? Это действие необратимо.`)) {
+    try {
+      await boardService.deleteBoard(activeBoard.value.id)
+      isBoardSettingsModalOpen.value = false
+      const idx = boards.value.findIndex(b => b.id === activeBoard.value.id)
+      if (idx !== -1) boards.value.splice(idx, 1)
+      if (boards.value.length > 0) {
+        selectBoard(boards.value[0].id)
+      } else {
+        activeBoardId.value = null
+        currentView.value = 'board'
+      }
+    } catch (error) {
+      console.error('Ошибка удаления доски:', error)
+    }
+  }
+}
+
 const createEditor = (content, taskId = null) => {
   const editor = markRaw(new Editor({
     extensions: [
@@ -1044,6 +1210,11 @@ const onTaskChange = async (evt, columnId) => {
     if (!task) return
     try {
       await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.added.newIndex)
+
+      const targetColumn = activeBoard.value.columns.find(c => c.id === columnId)
+      if (targetColumn && targetColumn.title.toLowerCase() === 'готово' && task.recurrence && task.recurrence !== 'none') {
+        await handleTaskRecurrence(task)
+      }
     } catch(e) { console.warn('Ошибка при перемещении задачи', e) }
   } else if (evt.moved && activeBoard.value) {
     const task = evt.moved.element
@@ -1227,3 +1398,4 @@ onBeforeUnmount(() => {
 .prose :deep(strong) { font-weight: 700; }
 .prose :deep(h1), .prose :deep(h2), .prose :deep(h3) { margin: 0; font-weight: 600; }
 </style>
+

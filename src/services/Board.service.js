@@ -65,6 +65,15 @@ export async function createBoard(title, template = 'Пустая доска') {
 }
 
 /**
+ * Обновить доску.
+ * PUT /boards/{boardId}
+ */
+export async function updateBoard(boardId, updates) {
+    const { data } = await api.put(`/boards/${boardId}`, updates);
+    return data;
+}
+
+/**
  * Удалить доску.
  * DELETE /boards/{boardId}
  */
@@ -164,6 +173,7 @@ function normalizeTask(task) {
         priority: task.priority || null,
         deadline: task.deadline || null,
         reminder: task.reminder || false,
+        recurrence: task.recurrence || 'none',
         createdAt: task.createdAt
             ? (typeof task.createdAt === 'object' ? task.createdAt._seconds * 1000 : task.createdAt)
             : Date.now(),
