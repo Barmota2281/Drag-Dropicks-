@@ -251,7 +251,7 @@
                   <!-- Badges: always rendered, hidden via v-show (no VNode branching) -->
                   <div
                       class="flex flex-wrap items-center gap-1.5 mt-2"
-                      v-show="element.priority || element.deadline || (element.recurrence && element.recurrence !== 'none')"
+                      v-show="element.assignee || element.priority || element.deadline || (element.recurrence && element.recurrence !== 'none')"
                   >
                     <span
                         v-show="element.recurrence && element.recurrence !== 'none'"
@@ -279,6 +279,14 @@
                     >
                       <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                       {{ formatDeadline(element.deadline) }}
+                    </span>
+                    <span
+                        v-show="element.assignee"
+                        class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                        title="Исполнитель"
+                    >
+                      <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                      <span class="truncate max-w-[100px]">{{ element.assignee }}</span>
                     </span>
                   </div>
 
@@ -557,6 +565,23 @@
               <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Название доски</label>
               <input v-model="boardSettingsForm.title" type="text" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors" />
             </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Участники</label>
+              <div class="flex flex-col gap-2">
+                <div v-for="(member, idx) in boardSettingsForm.members" :key="idx" class="flex items-center gap-2">
+                  <span class="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100">{{ member }}</span>
+                  <button @click="removeMember(idx)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Удалить участника">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                  </button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input v-model="boardSettingsForm.newMemberEmail" @keyup.enter="addMember" type="email" placeholder="Email участника" class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors" />
+                  <button @click="addMember" class="flex-shrink-0 text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent" title="Добавить участника">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
             <button @click="confirmDeleteBoard" class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20">Удалить доску</button>
@@ -629,6 +654,15 @@
                   {{ shortcut.label }}
                 </button>
               </div>
+            </div>
+
+            <!-- Assignee -->
+            <div v-if="activeBoard && activeBoard.members && activeBoard.members.length">
+              <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Исполнитель</label>
+              <select v-model="taskMetaForm.assignee" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors">
+                <option value="">Не назначен</option>
+                <option v-for="member in activeBoard.members" :key="member" :value="member">{{ member }}</option>
+              </select>
             </div>
 
             <!-- Recurrence -->
@@ -816,7 +850,7 @@ const formatDeadline = (deadline) => {
 
 // ── Task meta modal ─────────────────────────────────────────────────────────
 const editingTaskMeta = ref(null) // { task, columnId }
-const taskMetaForm = ref({ priority: null, deadline: '', reminder: false, columnId: '', recurrence: 'none' })
+const taskMetaForm = ref({ priority: null, deadline: '', reminder: false, columnId: '', recurrence: 'none', assignee: '' })
 
 const openTaskMeta = (task, columnId) => {
   editingTaskMeta.value = { task, columnId }
@@ -825,7 +859,8 @@ const openTaskMeta = (task, columnId) => {
     deadline: task.deadline || '',
     reminder: task.reminder || false,
     columnId: columnId,
-    recurrence: task.recurrence || 'none'
+    recurrence: task.recurrence || 'none',
+    assignee: task.assignee || ''
   }
 }
 
@@ -879,6 +914,7 @@ const saveTaskMeta = async () => {
   task.deadline = taskMetaForm.value.deadline
   task.reminder = taskMetaForm.value.reminder
   task.recurrence = taskMetaForm.value.recurrence
+  task.assignee = taskMetaForm.value.assignee
   const targetColId = taskMetaForm.value.columnId
 
   closeTaskMeta()
@@ -907,18 +943,15 @@ const saveTaskMeta = async () => {
         priority: task.priority,
         deadline: task.deadline,
         reminder: task.reminder,
-        recurrence: task.recurrence
+        recurrence: task.recurrence,
+        assignee: task.assignee,
+        columnId: task.columnId,
+        order: task.order
       })
-
-      if (isTaskMoved && newColRef && newColRef.title.toLowerCase() === 'готово' && task.recurrence && task.recurrence !== 'none') {
-        await handleTaskRecurrence(task)
-      }
-    } catch(e) { console.warn('Ошибка сохранения параметров задачи:', e) }
+    } catch (e) {
+      console.error('Ошибка обновления задачи:', e)
+    }
   }
-
-  // Rebuild notifications to reflect deadline changes immediately
-  buildNotifications()
-  addToast('Параметры задачи сохранены', 'success')
 }
 
 // ── Deadline notification checker ──────────────────────────────────────────
@@ -1087,22 +1120,43 @@ onMounted(() => {
 const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
 
 const isBoardSettingsModalOpen = ref(false)
-const boardSettingsForm = ref({ title: '' })
+const boardSettingsForm = ref({ title: '', members: [], newMemberEmail: '' })
 
 const openBoardSettings = () => {
   if (!activeBoard.value) return
-  boardSettingsForm.value = { title: activeBoard.value.title }
+  boardSettingsForm.value = {
+    title: activeBoard.value.title,
+    members: activeBoard.value.members ? [...activeBoard.value.members] : [],
+    newMemberEmail: ''
+  }
   isBoardSettingsModalOpen.value = true
+}
+
+const addMember = () => {
+  const email = boardSettingsForm.value.newMemberEmail.trim()
+  if (email && !boardSettingsForm.value.members.includes(email)) {
+    boardSettingsForm.value.members.push(email)
+  }
+  boardSettingsForm.value.newMemberEmail = ''
+}
+
+const removeMember = (idx) => {
+  boardSettingsForm.value.members.splice(idx, 1)
 }
 
 const saveBoardSettings = async () => {
   if (!activeBoard.value || !boardSettingsForm.value.title.trim()) return
   try {
     const newTitle = boardSettingsForm.value.title.trim()
-    await boardService.updateBoard(activeBoard.value.id, { title: newTitle })
+    const newMembers = [...boardSettingsForm.value.members]
+    await boardService.updateBoard(activeBoard.value.id, { title: newTitle, members: newMembers })
     activeBoard.value.title = newTitle
+    activeBoard.value.members = newMembers
     const idx = boards.value.findIndex(b => b.id === activeBoard.value.id)
-    if (idx !== -1) boards.value[idx].title = newTitle
+    if (idx !== -1) {
+      boards.value[idx].title = newTitle
+      boards.value[idx].members = newMembers
+    }
     isBoardSettingsModalOpen.value = false
   } catch (error) {
     console.error('Ошибка сохранения настроек доски:', error)
