@@ -18,6 +18,14 @@ export const authService = {
     return response.data;
   },
 
+  async loginWithGoogle(idToken) {
+    const response = await api.post('/auth/google', { idToken });
+    if (response.data?.token) {
+      saveToken(response.data.token, response.data.refreshToken, response.data.expiresIn);
+    }
+    return response.data;
+  },
+
   async getProfile() {
     const response = await api.get('/auth/me');
     return response.data;

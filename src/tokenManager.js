@@ -9,6 +9,10 @@ export function saveToken(idToken, refreshToken = null, expiresIn = 3600) {
     }
 }
 
+export function getToken() {
+    return localStorage.getItem('token');
+}
+
 export function isTokenExpired() {
     const expiresAt = localStorage.getItem('tokenExpiresAt');
     if (!expiresAt) return true;

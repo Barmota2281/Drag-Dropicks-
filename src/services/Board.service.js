@@ -174,6 +174,7 @@ function normalizeTask(task) {
         deadline: task.deadline || null,
         reminder: task.reminder || false,
         recurrence: task.recurrence || 'none',
+        assignee: task.assignee || null,
         createdAt: task.createdAt
             ? (typeof task.createdAt === 'object' ? task.createdAt._seconds * 1000 : task.createdAt)
             : Date.now(),

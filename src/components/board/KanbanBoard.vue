@@ -719,6 +719,7 @@ import { Emoji, gitHubEmojis } from '@tiptap/extension-emoji'
 import api from '../../api'
 import * as boardService from '../../services/board.service.js'
 import emojiSuggestion from './emojiSuggestion.js'
+import { wsService } from '../../services/websocket.service.js'
 
 const router = useRouter()
 const goHome = () => router.push({ name: 'Home' })
@@ -1115,6 +1116,37 @@ onMounted(() => {
     // Check deadlines after boards loaded, with small delay for UX
     setTimeout(checkDeadlines, 1500)
   })
+
+  // Initialize WebSocket
+  wsService.connect(handleBoardUpdate)
+})
+
+onBeforeUnmount(() => {
+  // Сначала сбрасываем activeEditor чтобы BubbleMenu размонтировался чисто
+  isUnmounting.value = true
+  activeEditor.value = null
+  // Синхронно уничтожаем все редакторы — без setTimeout чтобы не было race condition
+  boards.value.forEach(board => {
+    board.columns.forEach(column => {
+      column.tasks.forEach(task => {
+        if (task.editor && !task.editor.isDestroyed) {
+          try { task.editor.destroy() } catch(e) {}
+          task.editor = null
+        }
+      })
+    })
+  })
+  standaloneTasks.value.forEach(task => {
+    if (task.editor && !task.editor.isDestroyed) {
+      try { task.editor.destroy() } catch(e) {}
+      task.editor = null
+    }
+  })
+
+  window.removeEventListener('resize', checkIsMobile)
+  document.removeEventListener('click', closeAllPopups)
+
+  wsService.disconnect()
 })
 
 const activeBoard = computed(() => boards.value.find(b => b.id === activeBoardId.value))
@@ -1411,28 +1443,73 @@ const handleJumpToTask = ({ boardId, columnId, taskId, isStandalone }) => {
   }
 }
 
-onBeforeUnmount(() => {
-  // Сначала сбрасываем activeEditor чтобы BubbleMenu размонтировался чисто
-  isUnmounting.value = true
-  activeEditor.value = null
-  // Синхронно уничтожаем все редакторы — без setTimeout чтобы не было race condition
-  boards.value.forEach(board => {
-    board.columns.forEach(column => {
-      column.tasks.forEach(task => {
-        if (task.editor && !task.editor.isDestroyed) {
-          try { task.editor.destroy() } catch(e) {}
-          task.editor = null
-        }
+const closeAllPopups = (e) => {
+  if (!isMobile.value) return
+  const target = e.target
+  const sidebar = document.querySelector('[data-sidebar]')
+  const notifPanel = document.querySelector('[data-notif-panel]')
+  const exportModal = document.querySelector('[data-export-modal]')
+  const boardSettingsModal = document.querySelector('[data-board-settings-modal]')
+  const taskMetaModal = document.querySelector('[data-task-meta-modal]')
+
+  if (
+    sidebar && !sidebar.contains(target) &&
+    notifPanel && !notifPanel.contains(target) &&
+    exportModal && !exportModal.contains(target) &&
+    boardSettingsModal && !boardSettingsModal.contains(target) &&
+    taskMetaModal && !taskMetaModal.contains(target)
+  ) {
+    isSidebarOpen.value = false
+    isNotifPanelOpen.value = false
+  }
+}
+
+  // Handle WebSocket updates
+  const handleBoardUpdate = (message) => {
+    if (message.action === 'refresh') {
+      loadBoards()
+    } else {
+      console.log('Board updated:', message)
+    }
+  }
+
+  onMounted(() => {
+    window.addEventListener('resize', checkIsMobile)
+    document.addEventListener('click', closeAllPopups)
+    loadBoards()
+
+    // Initialize WebSocket
+    wsService.connect(handleBoardUpdate)
+  })
+
+  onBeforeUnmount(() => {
+    // Сначала сбрасываем activeEditor чтобы BubbleMenu размонтировался чисто
+    isUnmounting.value = true
+    activeEditor.value = null
+    // Синхронно уничтожаем все редакторы — без setTimeout чтобы не было race condition
+    boards.value.forEach(board => {
+      board.columns.forEach(column => {
+        column.tasks.forEach(task => {
+          if (task.editor && !task.editor.isDestroyed) {
+            try { task.editor.destroy() } catch(e) {}
+            task.editor = null
+          }
+        })
       })
     })
+    standaloneTasks.value.forEach(task => {
+      if (task.editor && !task.editor.isDestroyed) {
+        try { task.editor.destroy() } catch(e) {}
+        task.editor = null
+      }
+    })
+    window.removeEventListener('resize', checkIsMobile)
+    document.removeEventListener('click', closeAllPopups)
+
+    wsService.disconnect()
   })
-  standaloneTasks.value.forEach(task => {
-    if (task.editor && !task.editor.isDestroyed) {
-      try { task.editor.destroy() } catch(e) {}
-      task.editor = null
-    }
-  })
-})
+
+  // в”Ђв”Ђ Export/Import в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
 </script>
 
 <style scoped>
