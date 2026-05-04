@@ -1287,6 +1287,15 @@ const activeTaskId = ref(null)
 const activeTask = computed(() => standaloneTasks.value.find(t => t.id === activeTaskId.value))
 const isTasksOpen = ref(true)
 
+const checkIsMobile = () => {
+  isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) {
+    isSidebarOpen.value = true
+  } else {
+    isSidebarOpen.value = false
+  }
+}
+
 const activeEditor = ref(null)
 const isUnmounting = ref(false)
 
@@ -1442,6 +1451,7 @@ const handleJumpToTask = ({ boardId, columnId, taskId, isStandalone }) => {
     }, 150)
   }
 }
+
 
 const closeAllPopups = (e) => {
   if (!isMobile.value) return

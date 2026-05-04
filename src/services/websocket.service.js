@@ -16,7 +16,7 @@ class WebSocketService {
 
     this.client = new Client({
       // We use SockJS if native STOMP over ws isn't supported or to fallback
-      webSocketFactory: () => new SockJS(`${serverUrl}/ws`),
+      webSocketFactory: () => new SockJS(`${serverUrl}/ws?token=${token}`),
       connectHeaders: {
         Authorization: `Bearer ${token}`
       },
