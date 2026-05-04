@@ -239,7 +239,9 @@ const highlightMatch = (text, query) => {
 
 const formatDate = (ts) => {
   if (!ts) return ''
-  return new Date(ts).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
+  const d = new Date(ts)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
 const pluralResults = (n) => {

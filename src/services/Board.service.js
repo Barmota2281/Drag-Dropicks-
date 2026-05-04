@@ -176,7 +176,9 @@ function normalizeTask(task) {
         recurrence: task.recurrence || 'none',
         assignee: task.assignee || null,
         createdAt: task.createdAt
-            ? (typeof task.createdAt === 'object' ? task.createdAt._seconds * 1000 : task.createdAt)
+            ? (Array.isArray(task.createdAt)
+                ? new Date(task.createdAt[0], task.createdAt[1] - 1, task.createdAt[2], task.createdAt[3] || 0, task.createdAt[4] || 0, task.createdAt[5] || 0).getTime()
+                : (typeof task.createdAt === 'object' && task.createdAt._seconds ? task.createdAt._seconds * 1000 : task.createdAt))
             : Date.now(),
         // editor будет добавлен на фронте через createEditor()
     };

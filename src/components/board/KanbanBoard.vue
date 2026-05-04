@@ -292,7 +292,7 @@
 
                   <!-- Footer -->
                   <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 font-medium border-t border-gray-100 dark:border-gray-600 pt-2 flex justify-between items-center">
-                    <span>{{ new Date(element.createdAt).toLocaleDateString('ru-RU') }}</span>
+                    <span v-if="element.createdAt">{{ formatSafeDate(element.createdAt) }}</span>
                     <div class="flex items-center gap-0.5">
                       <button @click="openTaskMeta(element, column.id)" class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 transition-colors" title="Дедлайн и приоритет">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
@@ -575,8 +575,8 @@
                   </button>
                 </div>
                 <div class="flex items-center gap-2">
-                  <input v-model="boardSettingsForm.newMemberEmail" @keyup.enter="addMember" type="email" placeholder="Email участника" class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors" />
-                  <button @click="addMember" class="flex-shrink-0 text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent" title="Добавить участника">
+                  <input v-model="boardSettingsForm.newMemberEmail" @keydown.enter.prevent="addMember" type="email" placeholder="Email участника" class="flex-1 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm focus:outline-none focus:border-accent-500 focus:ring-1 focus:ring-accent-500 transition-colors" />
+                  <button type="button" @click.prevent="addMember" class="flex-shrink-0 text-gray-500 dark:text-gray-400 p-2 rounded hover:bg-accent-50 hover:text-accent-600 dark:hover:bg-accent-900/20 dark:hover:text-accent-400 transition-colors border border-transparent" title="Добавить участника">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                   </button>
                 </div>
@@ -584,10 +584,10 @@
             </div>
           </div>
           <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-800/50">
-            <button @click="confirmDeleteBoard" class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20">Удалить доску</button>
+            <button type="button" @click="confirmDeleteBoard" class="text-red-500 hover:text-red-700 text-sm font-medium transition-colors p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/20">Удалить доску</button>
             <div class="flex gap-2">
-              <button @click="isBoardSettingsModalOpen = false" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Отмена</button>
-              <button @click="saveBoardSettings" :disabled="!boardSettingsForm.title.trim()" class="px-4 py-2 bg-accent-600 hover:bg-accent-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">Сохранить</button>
+              <button type="button" @click="isBoardSettingsModalOpen = false" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">Отмена</button>
+              <button type="button" @click="saveBoardSettings" :disabled="!boardSettingsForm.title.trim()" class="px-4 py-2 bg-accent-600 hover:bg-accent-700 disabled:opacity-50 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm">Сохранить</button>
             </div>
           </div>
         </div>
@@ -867,6 +867,13 @@ const openTaskMeta = (task, columnId) => {
 
 const closeTaskMeta = () => { editingTaskMeta.value = null }
 
+const formatSafeDate = (dateVal) => {
+  if (!dateVal) return ''
+  const d = new Date(dateVal)
+  if (isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('ru-RU')
+}
+
 const handleTaskRecurrence = async (completedTask) => {
   if (!activeBoard.value || !activeBoard.value.columns.length) return
 
@@ -1037,7 +1044,7 @@ const exportBoard = (format) => {
           `"${(t.editor?.getText?.() || '').replace(/"/g, '""')}"`,
           `"${priorityConfig[t.priority]?.label || ''}"`,
           `"${t.deadline || ''}"`,
-          `"${new Date(t.createdAt).toLocaleDateString('ru-RU')}"`
+          `"${formatSafeDate(t.createdAt)}"`
         ])
       })
     })
@@ -1346,8 +1353,8 @@ const addColumn = async () => {
 }
 
 const editingColumn = ref(null)
-const editColData = ref({ title: '', color: '#9ca3af' })
-const editColumn = (column) => { editingColumn.value = column; editColData.value = { title: column.title, color: column.color || '#9ca3af' } }
+const editColData = ref({ title: '', color: '#9ca3f6' })
+const editColumn = (column) => { editingColumn.value = column; editColData.value = { title: column.title, color: column.color || '#9ca3f6' } }
 const closeEditColumn = () => { editingColumn.value = null }
 
 const saveColumnEdit = async () => {
