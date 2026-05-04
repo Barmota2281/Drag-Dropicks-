@@ -15,6 +15,7 @@ const avatarUrl = ref('')
 const phoneNumber = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
+const savedAccounts = ref([])
 
 const loadUserProfile = async () => {
   const token = localStorage.getItem('token');
@@ -32,6 +33,25 @@ const loadUserProfile = async () => {
       displayName.value = user.value.displayName || '';
       avatarUrl.value = user.value.avatarUrl || '';
       phoneNumber.value = user.value.phoneNumber || '';
+
+      const accountInfo = {
+        email: user.value.email,
+        displayName: user.value.displayName || user.value.email.split('@')[0],
+        avatarUrl: user.value.avatarUrl || '',
+        token: token
+      }
+      let accounts = [];
+      try {
+        accounts = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+      } catch(e) {}
+      const existingIdx = accounts.findIndex(a => a.email === accountInfo.email);
+      if (existingIdx !== -1) {
+        accounts[existingIdx] = accountInfo;
+      } else {
+        accounts.push(accountInfo);
+      }
+      localStorage.setItem('savedAccounts', JSON.stringify(accounts));
+      savedAccounts.value = accounts;
     }
   } catch (e) {
     console.error('Ошибка загрузки профиля', e);
@@ -43,6 +63,9 @@ const loadUserProfile = async () => {
 }
 
 onMounted(() => {
+  try {
+    savedAccounts.value = JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+  } catch(e) {}
   loadUserProfile();
 })
 
@@ -93,6 +116,21 @@ const handleUpdateProfile = async () => {
     });
     alert("Профиль успешно обновлен!");
     user.value = response.data;
+
+    // Update saved accounts
+    const accountInfo = {
+      email: user.value.email,
+      displayName: user.value.displayName || user.value.email.split('@')[0],
+      avatarUrl: user.value.avatarUrl || '',
+      token: localStorage.getItem('token')
+    }
+    let accounts = savedAccounts.value;
+    const existingIdx = accounts.findIndex(a => a.email === accountInfo.email);
+    if (existingIdx !== -1) accounts[existingIdx] = accountInfo;
+    else accounts.push(accountInfo);
+    localStorage.setItem('savedAccounts', JSON.stringify(accounts));
+    savedAccounts.value = accounts;
+
   } catch (err) {
     errorMsg.value = "Ошибка: " + (err.response?.data?.message || err.message);
   } finally {
@@ -105,12 +143,34 @@ const handleGoogleAuth = () => {
 }
 
 const handleLogout = () => {
+  if (user.value) {
+    let accounts = savedAccounts.value.filter(a => a.email !== user.value.email);
+    savedAccounts.value = accounts;
+    localStorage.setItem('savedAccounts', JSON.stringify(accounts));
+  }
   localStorage.removeItem('token');
   user.value = null;
   email.value = '';
   password.value = '';
   displayName.value = '';
-  router.push('/');
+
+  if (savedAccounts.value.length > 0) {
+    // Just show the login/switcher screen
+  } else {
+    router.push('/');
+  }
+}
+
+const switchAccount = async (acc) => {
+  localStorage.setItem('token', acc.token);
+  await loadUserProfile();
+}
+
+const addNewAccount = () => {
+  user.value = null;
+  email.value = '';
+  password.value = '';
+  isLoginMode.value = true;
 }
 
 const goHome = () => {
@@ -183,6 +243,24 @@ const goHome = () => {
               {{ isLoginMode ? 'Зарегистрироваться' : 'Войти' }}
             </button>
           </div>
+
+          <div v-if="savedAccounts.length > 0" class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-left">Или выберите сохраненный аккаунт</h3>
+            <div class="space-y-2">
+              <div v-for="acc in savedAccounts" :key="acc.email"
+                   @click="switchAccount(acc)"
+                   class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <img v-if="acc.avatarUrl" :src="acc.avatarUrl" class="w-8 h-8 rounded-full object-cover">
+                <div v-else class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-600 dark:text-gray-300">
+                  {{ acc.displayName.charAt(0).toUpperCase() }}
+                </div>
+                <div class="text-left">
+                  <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ acc.displayName }}</div>
+                  <div class="text-xs text-gray-500">{{ acc.email }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div v-else class="text-center">
@@ -220,6 +298,34 @@ const goHome = () => {
           </form>
 
           <hr class="border-gray-200 dark:border-gray-700 mb-6">
+
+          <div class="text-left mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Сохраненные аккаунты</h3>
+            <div class="space-y-2">
+              <div v-for="acc in savedAccounts" :key="acc.email"
+                   class="flex items-center justify-between p-3 rounded-lg border"
+                   :class="acc.email === user.email ? 'border-accent-500 bg-accent-50 dark:bg-accent-900/20' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800'">
+                <div class="flex items-center gap-3 w-3/4">
+                  <img v-if="acc.avatarUrl" :src="acc.avatarUrl" class="w-8 h-8 rounded-full object-cover shrink-0">
+                  <div v-else class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs shrink-0">
+                    {{ acc.displayName.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="truncate">
+                    <div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ acc.displayName }}</div>
+                    <div class="text-xs text-gray-500 truncate">{{ acc.email }}</div>
+                  </div>
+                </div>
+                <button v-if="acc.email !== user.email" @click="switchAccount(acc)" class="text-xs text-accent-600 hover:underline shrink-0">
+                  Перейти
+                </button>
+                <span v-else class="text-xs text-accent-600 font-medium shrink-0">Активный</span>
+              </div>
+            </div>
+
+            <button @click="addNewAccount" class="mt-3 w-full py-2 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              + Добавить аккаунт
+            </button>
+          </div>
 
           <button @click="handleLogout" class="px-6 py-2 w-full text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium rounded-lg transition-colors">
             Выйти из аккаунта
