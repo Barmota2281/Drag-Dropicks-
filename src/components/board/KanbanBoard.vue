@@ -345,7 +345,47 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
               </button>
             </bubble-menu>
-            <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none"/>
+            <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none mb-10"/>
+
+            <!-- Вложения -->
+            <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
+                  Вложения
+                </h3>
+                <label class="cursor-pointer text-sm bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded transition-colors font-medium">
+                  Добавить файл
+                  <input type="file" multiple class="hidden" @change="uploadAttachment">
+                </label>
+              </div>
+
+              <!-- Список файлов -->
+              <div v-if="activeTask.attachments && activeTask.attachments.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div v-for="(file, idx) in activeTask.attachments" :key="idx" class="flex items-center justify-between bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg p-2 group">
+                  <div class="flex items-center gap-3 overflow-hidden">
+                    <div v-if="file.dataUrl && file.type.startsWith('image/')" class="w-10 h-10 rounded bg-gray-200 shrink-0 overflow-hidden">
+                      <img :src="file.dataUrl" class="w-full h-full object-cover" alt="attachment">
+                    </div>
+                    <div v-else class="w-10 h-10 rounded bg-gray-200 dark:bg-gray-800 shrink-0 flex items-center justify-center text-gray-500">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div class="truncate">
+                      <a :href="file.dataUrl" download class="text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-accent-600 dark:hover:text-accent-400 truncate block transition-colors" :title="file.name">
+                        {{ file.name }}
+                      </a>
+                      <span class="text-xs text-gray-500 block">{{ Math.round(file.size / 1024) }} KB</span>
+                    </div>
+                  </div>
+                  <button @click="removeAttachment(idx)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                  </button>
+                </div>
+              </div>
+              <div v-else class="text-sm text-gray-400 text-center py-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+                Нет прикрепленных файлов
+              </div>
+            </div>
           </div>
           <div class="mt-4 flex justify-end">
             <button @click="deleteStandaloneTask(activeTask.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-transparent rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors px-4 py-2 font-medium flex items-center gap-2">
@@ -368,6 +408,16 @@
         <div class="mb-4">
           <label class="block text-gray-700 dark:text-gray-300 text-sm mb-2 font-medium">Название</label>
           <input v-model="editColData.title" type="text" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded p-2 focus:outline-none focus:ring-1 focus:ring-gray-400">
+        </div>
+        <div class="mb-4">
+          <label class="block text-gray-700 dark:text-gray-300 text-sm mb-2 font-medium">Категория (статус)</label>
+          <select v-model="editColData.category" class="w-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded p-2 focus:outline-none focus:ring-1 focus:ring-gray-400">
+            <option value="none">Обычная</option>
+            <option value="todo">К выполнению</option>
+            <option value="in_progress">В процессе</option>
+            <option value="done">Готово</option>
+            <option value="archived">Архив</option>
+          </select>
         </div>
         <div class="mb-6">
           <label class="block text-gray-700 dark:text-gray-300 text-sm mb-2 font-medium">Цвет</label>
@@ -1314,6 +1364,16 @@ const onTaskChange = async (evt, columnId) => {
       await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.added.newIndex)
 
       const targetColumn = activeBoard.value.columns.find(c => c.id === columnId)
+
+      // Check if dropped into 'done' column to animate
+      if (targetColumn && (targetColumn.category === 'done' || targetColumn.title.toLowerCase() === 'готово')) {
+        const el = document.querySelector(`[data-task-id="${task.id}"]`)
+        if (el) {
+          el.classList.add('ring-4', 'ring-green-400', 'bg-green-50', 'dark:bg-green-900/30', 'transition-all', 'duration-500', 'scale-105')
+          setTimeout(() => el.classList.remove('ring-4', 'ring-green-400', 'bg-green-50', 'dark:bg-green-900/30', 'transition-all', 'duration-500', 'scale-105'), 1500)
+        }
+      }
+
       if (targetColumn && targetColumn.title.toLowerCase() === 'готово' && task.recurrence && task.recurrence !== 'none') {
         await handleTaskRecurrence(task)
       }
@@ -1353,17 +1413,53 @@ const addColumn = async () => {
 }
 
 const editingColumn = ref(null)
-const editColData = ref({ title: '', color: '#9ca3f6' })
-const editColumn = (column) => { editingColumn.value = column; editColData.value = { title: column.title, color: column.color || '#9ca3f6' } }
+const editColData = ref({ title: '', color: '#9ca3f6', category: 'none' })
+const editColumn = (column) => { editingColumn.value = column; editColData.value = { title: column.title, color: column.color || '#9ca3f6', category: column.category || 'none' } }
 const closeEditColumn = () => { editingColumn.value = null }
+
+const uploadAttachment = (event) => {
+  const files = event.target.files
+  if (!files || files.length === 0 || !activeTask.value) return
+  if (!activeTask.value.attachments) activeTask.value.attachments = []
+
+  for (let file of files) {
+    // В реальном приложении здесь был бы API запрос на загрузку файла
+    // Для демо мы просто читаем в base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      activeTask.value.attachments.push({
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        dataUrl: e.target.result
+      })
+      if (activeBoard.value) {
+        boardService.updateTask(activeBoard.value.id, activeTask.value.id, { attachments: activeTask.value.attachments })
+          .catch(err => console.warn('Ошибка сохранения файла:', err))
+      }
+    }
+    reader.readAsDataURL(file)
+  }
+  event.target.value = ''
+}
+
+const removeAttachment = (index) => {
+  if (!activeTask.value || !activeTask.value.attachments) return
+  activeTask.value.attachments.splice(index, 1)
+  if (activeBoard.value) {
+    boardService.updateTask(activeBoard.value.id, activeTask.value.id, { attachments: activeTask.value.attachments })
+      .catch(err => console.warn('Ошибка удаления файла:', err))
+  }
+}
 
 const saveColumnEdit = async () => {
   if (editingColumn.value && activeBoard.value) {
     const col = activeBoard.value.columns.find(c => c.id === editingColumn.value.id)
     if (col) {
-      try { await boardService.updateColumn(activeBoard.value.id, col.id, { title: editColData.value.title, color: editColData.value.color }) } catch (e) { console.warn('Ошибка обновления колонки:', e) }
+      try { await boardService.updateColumn(activeBoard.value.id, col.id, { title: editColData.value.title, color: editColData.value.color, category: editColData.value.category }) } catch (e) { console.warn('Ошибка обновления колонки:', e) }
       col.title = editColData.value.title
       col.color = editColData.value.color
+      col.category = editColData.value.category
     }
     closeEditColumn()
   }
