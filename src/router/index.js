@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import BoardView from '../views/BoardView.vue'
+import CalendarView from '../views/CalendarView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import LoginView from '../views/LoginView.vue'
@@ -27,6 +28,12 @@ const routes = [
         path: '/board',
         name: 'Board',
         component: BoardView,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: '/calendar',
+        name: 'Calendar',
+        component: CalendarView,
         meta: { requiresAuth: true }
     },
     {

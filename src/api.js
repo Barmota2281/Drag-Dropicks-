@@ -27,7 +27,8 @@ api.interceptors.response.use(
     async (error) => {
         if (error.response?.status === 403 || error.response?.status === 401) {
             const url = error.config?.url || '';
-            if (!url.includes('/auth/') && !error.config._retried) {
+            const isAuthEndpoint = url.includes('/auth/login') || url.includes('/auth/register');
+            if (!isAuthEndpoint && !error.config._retried) {
                 error.config._retried = true;
                 const newToken = await refreshToken();
                 if (newToken) {

@@ -239,7 +239,14 @@ const highlightMatch = (text, query) => {
 
 const formatDate = (ts) => {
   if (!ts) return ''
-  const d = new Date(ts)
+  let d;
+  if (Array.isArray(ts)) {
+    d = new Date(ts[0], (ts[1] || 1) - 1, ts[2] || 1, ts[3] || 0, ts[4] || 0, ts[5] || 0)
+  } else if (typeof ts === 'object' && ts._seconds) {
+    d = new Date(ts._seconds * 1000)
+  } else {
+    d = new Date(ts)
+  }
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }

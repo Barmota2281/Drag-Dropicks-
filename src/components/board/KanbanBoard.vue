@@ -123,6 +123,10 @@
       </div>
 
       <div v-if="isSidebarOpen" class="mt-auto w-full px-4 pb-6 pt-4 flex-shrink-0 space-y-2">
+        <button @click="router.push('/calendar')" class="w-full py-2 px-4 rounded-lg bg-transparent border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 transition-colors flex items-center justify-center gap-2 text-sm font-medium">
+          <svg class="w-4 h-4 text-current" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-3-3V6z"/></svg>
+          Календарь
+        </button>
         <!-- Notification center button -->
         <button @click="isNotifPanelOpen = !isNotifPanelOpen"
                 class="w-full py-2 px-4 rounded-lg border transition-colors flex items-center justify-between text-sm font-medium"
@@ -172,28 +176,29 @@
 
       <!-- Board view -->
       <!-- Single global bubble-menu outside draggable, tracks activeEditor -->
-      <bubble-menu
-          v-if="activeEditor && !activeEditor.isDestroyed"
-          :editor="activeEditor"
-          :tippy-options="{ duration: 100, placement: 'top' }"
-          class="flex bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden items-center z-[200]"
-      >
-        <button @click="activeEditor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
-        <button @click="activeEditor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
-        <button @click="activeEditor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
-        <button @click="activeEditor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
-        <button @click="activeEditor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
-        <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-        <input type="color" @input="(e) => activeEditor.chain().focus().setColor(e.target.value).run()" :value="activeEditor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста"/>
-        <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-        <button @click="copySelection(activeEditor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-        </button>
-      </bubble-menu>
+      <div v-if="activeEditor && !activeEditor.isDestroyed">
+        <bubble-menu
+            :editor="activeEditor"
+            :tippy-options="{ duration: 100, placement: 'top' }"
+            class="flex bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 overflow-hidden items-center z-[200]"
+        >
+          <button @click="activeEditor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
+          <button @click="activeEditor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
+          <button @click="activeEditor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
+          <button @click="activeEditor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
+          <button @click="activeEditor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeEditor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
+          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <input type="color" @input="(e) => activeEditor.chain().focus().setColor(e.target.value).run()" :value="activeEditor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста"/>
+          <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+          <button @click="copySelection(activeEditor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors" title="Копировать">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          </button>
+        </bubble-menu>
+      </div>
 
-      <div v-if="currentView === 'board' && activeBoard" class="flex gap-4 overflow-x-auto items-stretch pb-5 w-full flex-1 h-full px-0">
+    <div v-if="currentView === 'board' && activeBoard" class="flex gap-4 overflow-x-auto items-start pb-5 w-full flex-1 h-full px-0 min-h-0">
         <div v-for="column in activeBoard.columns" :key="column.id"
-             class="flex-none w-72 sm:w-80 bg-gray-100 dark:bg-gray-900/60 rounded-xl p-4 shadow-sm border-t-4 max-h-full flex flex-col transition-colors border-x border-b border-gray-200/50 dark:border-gray-700"
+             class="flex-none w-72 sm:w-80 bg-gray-100 dark:bg-gray-900/60 rounded-xl p-4 shadow-sm border-t-4 flex flex-col transition-colors border-x border-b border-gray-200/50 dark:border-gray-700 max-h-full min-h-0"
              :style="{ borderTopColor: column.color || '#9ca3af' }">
           <div class="flex justify-between items-center mb-4 group/header">
             <h3 class="mt-0 text-lg font-semibold transition-colors" :style="{ color: column.color || 'inherit' }">{{ column.title }}</h3>
@@ -213,7 +218,7 @@
               :animation="200"
               :force-fallback="true"
               fallback-class="sortable-fallback"
-              class="flex-1 flex flex-col gap-3 overflow-y-auto min-h-[150px] p-1 pb-6"
+              class="flex-1 flex flex-col gap-3 overflow-y-auto min-h-0 p-1 pb-6"
               ghost-class="sortable-ghost"
               drag-class="sortable-drag"
               @change="(evt) => onTaskChange(evt, column.id)"
@@ -246,7 +251,7 @@
                   </div>
 
                   <!-- Editor -->
-                  <editor-content :editor="element.editor" class="focus:outline-none min-h-[40px] prose prose-sm dark:prose-invert max-w-none pr-10 pl-1 pt-1"/>
+                  <editor-content :key="element.editor?.customId || element.id" :editor="element.editor" class="focus:outline-none min-h-[40px] prose prose-sm dark:prose-invert max-w-none pr-10 pl-1 pt-1"/>
 
                   <!-- Badges: always rendered, hidden via v-show (no VNode branching) -->
                   <div
@@ -277,7 +282,7 @@
                         class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs font-medium"
                         :class="deadlineClass(element.deadline)"
                     >
-                      <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-3-3V6z"/></svg>
                       {{ formatDeadline(element.deadline) }}
                     </span>
                     <span
@@ -294,7 +299,13 @@
                   <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 font-medium border-t border-gray-100 dark:border-gray-600 pt-2 flex justify-between items-center">
                     <span v-if="element.createdAt">{{ formatSafeDate(element.createdAt) }}</span>
                     <div class="flex items-center gap-0.5">
-                      <button @click="openTaskMeta(element, column.id)" class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 transition-colors" title="Дедлайн и приоритет">
+                      <button @click="toggleTaskCompletion(column.id, element)" :class="element.completed ? 'text-green-500 hover:text-green-600' : 'text-gray-400 hover:text-green-500'" class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors" :title="element.completed ? 'Отметить как невыполненное' : 'Отметить как выполненное'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path v-if="element.completed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                      <button @click="openTaskMeta(element, column.id)" class="p-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-400 hover:text-accent-600 dark:hover:text-accent-400 transition-colors" title="Дэдлайн и приоритет">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
                       </button>
                       <button @click="deleteTask(column.id, element.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1.5 bg-transparent rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors" title="Удалить">
@@ -331,21 +342,23 @@
             <div class="custom-drag-handle flex items-center justify-center w-5 h-6 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded cursor-grab active:cursor-grabbing transition-colors z-50">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
             </div>
-            <bubble-menu :editor="activeTask.editor" :tippy-options="{ duration: 100 }" v-if="activeTask.editor"
-                         class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center">
-              <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
-              <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
-              <button @click="activeTask.editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
-              <button @click="activeTask.editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
-              <button @click="activeTask.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
-              <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-              <input type="color" @input="(event) => activeTask.editor.chain().focus().setColor(event.target.value).run()" :value="activeTask.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста"/>
-              <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-              <button @click="copySelection(activeTask.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-              </button>
-            </bubble-menu>
-            <editor-content :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none mb-10"/>
+            <div v-if="activeTask.editor && !activeTask.editor.isDestroyed">
+              <bubble-menu :editor="activeTask.editor" :tippy-options="{ duration: 100 }"
+                           class="flex bg-white dark:bg-gray-800 rounded shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden items-center">
+                <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 1 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 1 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H1</button>
+                <button @click="activeTask.editor.chain().focus().toggleHeading({ level: 2 }).run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('heading', { level: 2 }) }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-semibold text-gray-700 dark:text-gray-200">H2</button>
+                <button @click="activeTask.editor.chain().focus().toggleBold().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('bold') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm font-bold text-gray-700 dark:text-gray-200">B</button>
+                <button @click="activeTask.editor.chain().focus().toggleItalic().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('italic') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm italic text-gray-700 dark:text-gray-200">I</button>
+                <button @click="activeTask.editor.chain().focus().toggleHighlight().run()" :class="{ 'bg-gray-100 dark:bg-gray-700': activeTask.editor.isActive('highlight') }" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-sm text-gray-700 dark:text-gray-200">Mark</button>
+                <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                <input type="color" @input="(event) => activeTask.editor.chain().focus().setColor(event.target.value).run()" :value="activeTask.editor.getAttributes('textStyle').color || '#000000'" class="w-6 h-6 p-0 border-none cursor-pointer bg-transparent mx-1 rounded" title="Цвет текста"/>
+                <div class="h-4 w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
+                <button @click="copySelection(activeTask.editor)" class="p-2 hover:bg-gray-50 dark:hover:bg-gray-700/80 text-gray-700 dark:text-gray-200 rounded transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                </button>
+                </bubble-menu>
+            </div>
+            <editor-content :key="activeTask.editor?.customId || activeTask.id" :editor="activeTask.editor" class="focus:outline-none prose prose-lg dark:prose-invert max-w-none mb-10"/>
 
             <!-- Вложения -->
             <div class="mt-8 border-t border-gray-100 dark:border-gray-700 pt-6">
@@ -387,7 +400,15 @@
               </div>
             </div>
           </div>
-          <div class="mt-4 flex justify-end">
+          <div class="mt-4 flex justify-between items-center">
+            <button @click="toggleStandaloneTaskCompletion(activeTask)" :class="activeTask.completed ? 'text-green-600 bg-green-50 hover:bg-green-100 dark:bg-green-900/30' : 'text-gray-500 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800'" class="transition-colors px-4 py-2 rounded-lg font-medium flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path v-if="activeTask.completed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              {{ activeTask.completed ? 'Выполнено' : 'Отметить выполненной' }}
+            </button>
+
             <button @click="deleteStandaloneTask(activeTask.id)" class="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 bg-transparent rounded hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors px-4 py-2 font-medium flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
               Удалить задачу
@@ -485,7 +506,7 @@
                 <svg v-if="notif.urgency === 'overdue'" class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                 <svg v-else-if="notif.urgency === 'today'" class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                 <svg v-else-if="notif.urgency === 'tomorrow'" class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <svg v-else class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <svg v-else class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 01-3-3V6z"/></svg>
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-start justify-between gap-2">
@@ -919,7 +940,14 @@ const closeTaskMeta = () => { editingTaskMeta.value = null }
 
 const formatSafeDate = (dateVal) => {
   if (!dateVal) return ''
-  const d = new Date(dateVal)
+  let d;
+  if (Array.isArray(dateVal)) {
+    d = new Date(dateVal[0], (dateVal[1] || 1) - 1, dateVal[2] || 1, dateVal[3] || 0, dateVal[4] || 0, dateVal[5] || 0)
+  } else if (typeof dateVal === 'object' && dateVal._seconds) {
+    d = new Date(dateVal._seconds * 1000)
+  } else {
+    d = new Date(dateVal)
+  }
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('ru-RU')
 }
@@ -1296,6 +1324,7 @@ const createEditor = (content, taskId = null) => {
       }
     },
   }))
+  editor.customId = Math.random().toString(36).substr(2, 9)
   return editor
 }
 
@@ -1361,7 +1390,11 @@ const onTaskChange = async (evt, columnId) => {
     const task = evt.added.element
     if (!task) return
     try {
-      await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.added.newIndex)
+      await boardService.updateTask(activeBoard.value.id, task.id, {
+        ...task,
+        columnId,
+        order: evt.added.newIndex
+      })
 
       const targetColumn = activeBoard.value.columns.find(c => c.id === columnId)
 
@@ -1382,7 +1415,11 @@ const onTaskChange = async (evt, columnId) => {
     const task = evt.moved.element
     if (!task) return
     try {
-      await boardService.moveTask(activeBoard.value.id, task.id, columnId, evt.moved.newIndex)
+      await boardService.updateTask(activeBoard.value.id, task.id, {
+        ...task,
+        columnId,
+        order: evt.moved.newIndex
+      })
     } catch(e) { console.warn('Ошибка при изменении порядка задачи', e) }
   }
 }
@@ -1492,26 +1529,33 @@ const addTask = async (columnId) => {
 
 const addGeneralTask = async () => {
   const newTaskId = generateId()
-  standaloneTasks.value.push({ id: newTaskId, title: 'Новая задача', editor: createEditor('<p>Начните писать здесь...</p>'), createdAt: Date.now() })
+  standaloneTasks.value.push({ id: newTaskId, title: 'Новая задача', editor: createEditor('<p></p>'), createdAt: Date.now() })
   activeTaskId.value = newTaskId
   currentView.value = 'task'
 }
 
-const deleteStandaloneTask = (id) => {
-  if (confirm('Вы уверены?')) {
-    const index = standaloneTasks.value.findIndex(t => t.id === id)
-    if (index !== -1) {
-      const task = standaloneTasks.value[index]
-      const editorObj = task.editor
-      task.editor = null
-      standaloneTasks.value.splice(index, 1)
-      if (editorObj && !editorObj.isDestroyed) {
-        setTimeout(() => {
-          try { editorObj.destroy() } catch(e){}
-        }, 100)
-      }
-      if (standaloneTasks.value.length > 0) activeTaskId.value = standaloneTasks.value[0].id
-      else currentView.value = 'board'
+const toggleStandaloneTaskCompletion = (task) => {
+  task.completed = !task.completed
+  addToast(task.completed ? 'Задача выполнена!' : 'Отметка снята', 'success')
+}
+
+const deleteStandaloneTask = async (taskId) => {
+  try {
+    await boardService.deleteTask('t3:1', taskId)
+  } catch (e) {
+    console.warn('Ошибка при удалении автономной задачи', e)
+  }
+  const index = standaloneTasks.value.findIndex(t => t.id === taskId)
+  if (index !== -1) {
+    const task = standaloneTasks.value[index]
+    const editorObj = task.editor
+    if (activeEditor.value === editorObj) {
+      activeEditor.value = null
+    }
+    task.editor = null
+    standaloneTasks.value.splice(index, 1)
+    if (editorObj && !editorObj.isDestroyed) {
+      try { editorObj.destroy() } catch(e){}
     }
   }
 }
@@ -1526,13 +1570,28 @@ const deleteTask = async (columnId, taskId) => {
     if (index !== -1) {
       const task = column.tasks[index]
       const editorObj = task.editor
+      if (activeEditor.value === editorObj) {
+        activeEditor.value = null
+      }
       task.editor = null
       column.tasks.splice(index, 1)
       if (editorObj && !editorObj.isDestroyed) {
-        setTimeout(() => {
-          try { editorObj.destroy() } catch(e){}
-        }, 100)
+        try { editorObj.destroy() } catch(e){}
       }
+    }
+  }
+}
+
+const toggleTaskCompletion = async (columnId, task) => {
+  if (activeBoard.value) {
+    task.completed = !task.completed
+    try {
+      await boardService.updateTask(activeBoard.value.id, task.id, {
+        completed: task.completed
+      })
+    } catch(e) {
+      task.completed = !task.completed // revert on fail
+      console.warn('Ошибка при обновлении статуса задачи', e)
     }
   }
 }

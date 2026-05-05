@@ -87,6 +87,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../services/auth.service';
+import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 const displayName = ref('');
 const email = ref('');
@@ -94,8 +95,19 @@ const password = ref('');
 const error = ref('');
 const router = useRouter();
 
-const handleGoogleAuth = () => {
-  window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/oauth2/authorization/google`;
+const handleGoogleAuth = async () => {
+  try {
+    error.value = '';
+    const auth = getAuth();
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const idToken = await result.user.getIdToken();
+    await authService.loginWithGoogle(idToken);
+    router.push('/board');
+  } catch (err) {
+    error.value = 'Ошибка регистрации через Google.';
+    console.error(err);
+  }
 };
 
 const handleRegister = async () => {

@@ -121,7 +121,7 @@ export async function deleteColumn(boardId, columnId) {
 export async function createTask(boardId, columnId, order = 0) {
     const { data } = await api.post(`/boards/${boardId}/tasks`, {
         columnId,
-        content: '<p>Новая задача...</p>',
+        content: '<p></p>',
         order,
         priority: null,
         deadline: null,
@@ -175,6 +175,7 @@ function normalizeTask(task) {
         reminder: task.reminder || false,
         recurrence: task.recurrence || 'none',
         assignee: task.assignee || null,
+        completed: task.completed || false,
         createdAt: task.createdAt
             ? (Array.isArray(task.createdAt)
                 ? new Date(task.createdAt[0], task.createdAt[1] - 1, task.createdAt[2], task.createdAt[3] || 0, task.createdAt[4] || 0, task.createdAt[5] || 0).getTime()
